@@ -1,6 +1,6 @@
 package io.github.e1turin.circulator.demo
 
-import io.github.e1turin.circulator.arcilator.StateFile
+import io.github.e1turin.circulator.interop.arcilator.StateFile
 import io.github.e1turin.circulator.model.generateFileSpec
 import kotlinx.serialization.json.Json
 import java.io.File

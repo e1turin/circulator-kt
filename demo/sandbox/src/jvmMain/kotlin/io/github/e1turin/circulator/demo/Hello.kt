@@ -21,12 +21,6 @@ fun playWithFFM() {
     println("proper library name: $properLibName")
     println("library search path: ${System.getProperty("java.library.path")}")
 
-    // does not load library automatically on Windows...
-    // need to setup classpath to generated files
-    jextractFFM()
-
-    println("\n - - - \n")
-
     rawFFM()
 
     println("\n - - - \n")
@@ -36,6 +30,13 @@ fun playWithFFM() {
     println("\n - - - \n")
 
     generatedFfmWrapper()
+
+    println("\n - - - \n")
+
+    // does not load library automatically on Windows...
+    // need to setup classpath to generated files
+    // TODO: check https://github.com/whyoleg/kotlin-interop-playground/blob/main/build-logic/src/main/kotlin/kipbuild.jextract.gradle.kts
+    jextractFFM()
 }
 
 private fun generatedFfmWrapper() {
@@ -114,7 +115,7 @@ private fun rawFFM() {
 
         // reset <= 1
         state[ValueLayout.JAVA_BYTE, 1] = 1
-        for (i in 0..10) {
+        for (i in 1..10) {
             // clk <= 1
             state[ValueLayout.JAVA_BYTE, 0] = 1
             dutEval.invokeExact(state)
@@ -125,7 +126,7 @@ private fun rawFFM() {
 
         // reset <= 0
         state[ValueLayout.JAVA_BYTE, 1] = 0
-        for (i in 0..10) {
+        for (i in 1..10) {
             // clk <= 1
             state[ValueLayout.JAVA_BYTE, 0] = 1
             dutEval.invokeExact(state)

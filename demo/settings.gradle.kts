@@ -24,4 +24,5 @@ dependencyResolutionManagement {
     }
 }
 
-include("basic-counter")
+include("sandbox")
+includeBuild("..")

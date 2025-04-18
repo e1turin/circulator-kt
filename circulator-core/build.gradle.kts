@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -17,7 +18,7 @@ dependencies {
 }
 
 kotlin {
-    explicitApi()
+    explicitApi = ExplicitApiMode.Strict
 
     jvm {
         compilerOptions {

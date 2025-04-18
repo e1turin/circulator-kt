@@ -1,5 +1,6 @@
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.konan.target.HostManager
 import org.jetbrains.kotlin.konan.target.KonanTarget
 import java.nio.file.Paths
@@ -13,26 +14,17 @@ plugins {
 group = "io.github.e1turin.circulator"
 version = "0.0.1"
 
-//repositories {
-//    mavenCentral()
-//    mavenLocal()
-//}
-
 kotlin {
     jvm {
         compilerOptions {
             jvmTarget = JvmTarget.JVM_22
         }
 
-//        @OptIn(ExperimentalKotlinGradlePluginApi::class)
-//        binaries {
-//            executable {
-//                mainClass = "io.github.e1turin.circulator.demo.Main"
-//            }
-//        }
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
-        mainRun {
-            mainClass = "io.github.e1turin.circulator.demo.Main"
+        binaries {
+            executable(KotlinCompilation.MAIN_COMPILATION_NAME, "counter") {
+                mainClass = "io.github.e1turin.circulator.demo.Main"
+            }
         }
     }
     sourceSets {
@@ -61,10 +53,11 @@ kotlin {
 }
 
 
+// allow JVM access native libraries with FFM API
 tasks.withType<JavaExec>().configureEach {
     jvmArgs("--enable-native-access=ALL-UNNAMED")
 
-    val dynLibPath = "${projectDir}/src/jvmMain/resources/lib/"
+    val dynLibPath = "${projectDir}/src/jvmMain/resources/lib/counter/"
 
     when (val host = HostManager.host) {
         // by some reason setting up java.library.path variable do not give result

@@ -1,8 +1,8 @@
 package io.github.e1turin.circulator.model
 
 import com.squareup.kotlinpoet.*
-import io.github.e1turin.circulator.arcilator.ModelInfo
-import io.github.e1turin.circulator.arcilator.StateInfo
+import io.github.e1turin.circulator.interop.arcilator.ModelInfo
+import io.github.e1turin.circulator.interop.arcilator.StateInfo
 import io.github.e1turin.circulator.state.StateProjectionType
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
