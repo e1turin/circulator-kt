@@ -19,4 +19,4 @@ dependencyResolutionManagement {
 }
 
 include("circulator-core")
-//includeBuild("demo")
+include("circulator-plugin")

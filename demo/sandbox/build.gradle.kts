@@ -3,12 +3,12 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.konan.target.HostManager
 import org.jetbrains.kotlin.konan.target.KonanTarget
-import java.nio.file.Paths
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.vanniktech.mavenPublish)
+    id("circulator-plugin")
 }
 
 group = "io.github.e1turin.circulator"
@@ -23,7 +23,7 @@ kotlin {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
         binaries {
             executable(KotlinCompilation.MAIN_COMPILATION_NAME, "counter") {
-                mainClass = "io.github.e1turin.circulator.demo.Main"
+                mainClass = "io.github.e1turin.circulator.demo.MainKt"
             }
         }
     }
@@ -43,15 +43,28 @@ kotlin {
         val jvmMain by getting {
             dependencies {
             }
-
-            val circulatorGeneratedDir = layout.buildDirectory.dir("generated/sources/circulator/jvmMain/kotlin/")
-            val jextractGeneratedDir = layout.buildDirectory.dir("generated/sources/jextract/jvmMain/java/")
-
-            kotlin.srcDirs(circulatorGeneratedDir, jextractGeneratedDir)
         }
     }
 }
 
+val jextractBuild = layout.buildDirectory.dir("generated/sources/jextract/jvmMain/java/")
+
+circulator {
+    packageName = "io.github.e1turin.circulator.demo.generated"
+    stateFile = file("src/jvmMain/resources/arcilator/model-states.json")
+    outputDir = layout.buildDirectory.dir("generated/sources/circulator/jvmMain/kotlin/").get()
+    jextractOutputDir = jextractBuild.get()
+}
+
+// TODO: some how set java sourcest from plugin
+//  - https://youtrack.jetbrains.com/issue/KT-66642/KMP-Kotlin-compiler-can-resolve-references-from-Java-code-when-it-should-not
+java {
+    sourceSets {
+        val jvmMain by getting {
+            java.srcDir(jextractBuild)
+        }
+    }
+}
 
 // allow JVM access native libraries with FFM API
 tasks.withType<JavaExec>().configureEach {
@@ -71,3 +84,4 @@ tasks.withType<JavaExec>().configureEach {
     }
 
 }
+
