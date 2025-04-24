@@ -47,24 +47,21 @@ kotlin {
     }
 }
 
-val jextractBuild = layout.buildDirectory.dir("generated/sources/jextract/jvmMain/java/")
 
 circulator {
     packageName = "io.github.e1turin.circulator.demo.generated"
     stateFile = file("src/jvmMain/resources/arcilator/model-states.json")
     outputDir = layout.buildDirectory.dir("generated/sources/circulator/jvmMain/kotlin/").get()
-    jextractOutputDir = jextractBuild.get()
 }
 
-// TODO: some how set java sourcest from plugin
-//  - https://youtrack.jetbrains.com/issue/KT-66642/KMP-Kotlin-compiler-can-resolve-references-from-Java-code-when-it-should-not
-java {
-    sourceSets {
-        val jvmMain by getting {
-            java.srcDir(jextractBuild)
-        }
-    }
-}
+//java {
+//    sourceSets {
+//        val jvmMain by getting {
+//            val jextracted = layout.buildDirectory.dir("generated/sources/jextract/jvmMain/java/")
+//            java.srcDir(jextracted)
+//        }
+//    }
+//}
 
 // allow JVM access native libraries with FFM API
 tasks.withType<JavaExec>().configureEach {

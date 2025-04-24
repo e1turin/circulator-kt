@@ -145,7 +145,7 @@ private fun jextractFFM() {
         val state = it.allocate(State.layout())
 
         State.reset(state, 1)
-        for (i in 0..10) {
+        for (i in 1..10) {
             State.clk(state, 1)
             dut_h.Dut_eval(state)
             State.clk(state, 0)
@@ -153,7 +153,7 @@ private fun jextractFFM() {
         }
 
         State.reset(state, 0)
-        for (i in 0..10) {
+        for (i in 1..10) {
             State.clk(state, 1)
             dut_h.Dut_eval(state)
             State.clk(state, 0)
