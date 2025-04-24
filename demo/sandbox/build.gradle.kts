@@ -20,8 +20,7 @@ kotlin {
             jvmTarget = JvmTarget.JVM_22
         }
 
-        @OptIn(ExperimentalKotlinGradlePluginApi::class)
-        binaries {
+        @OptIn(ExperimentalKotlinGradlePluginApi::class) binaries {
             executable(KotlinCompilation.MAIN_COMPILATION_NAME, "counter") {
                 mainClass = "io.github.e1turin.circulator.demo.MainKt"
             }
@@ -41,8 +40,7 @@ kotlin {
             }
         }
         val jvmMain by getting {
-            dependencies {
-            }
+            dependencies {}
         }
     }
 }
@@ -54,14 +52,19 @@ circulator {
     outputDir = layout.buildDirectory.dir("generated/sources/circulator/jvmMain/kotlin/").get()
 }
 
-//java {
-//    sourceSets {
-//        val jvmMain by getting {
-//            val jextracted = layout.buildDirectory.dir("generated/sources/jextract/jvmMain/java/")
-//            java.srcDir(jextracted)
-//        }
-//    }
-//}
+java {
+    sourceSets {
+        val jvmMain by getting {
+            /*
+                TODO: move Java srcDir configuration to Jextract plugin
+                NOTE: there is curious bug with Kotlin srcDirs with Java sources in KMP:
+                      - https://youtrack.jetbrains.com/issue/KT-66642/KMP-Kotlin-compiler-can-resolve-references-from-Java-code-when-it-should-not
+            */
+            val jextracted = layout.buildDirectory.dir("generated/sources/jextract/jvmMain/java/")
+            java.srcDir(jextracted)
+        }
+    }
+}
 
 // allow JVM access native libraries with FFM API
 tasks.withType<JavaExec>().configureEach {
