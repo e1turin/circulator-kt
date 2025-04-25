@@ -38,9 +38,6 @@ fun playWithFFM() {
 
     println("\n - - - \n")
 
-    // does not load library automatically on Windows...
-    // need to setup classpath to generated files
-    // TODO: check https://github.com/whyoleg/kotlin-interop-playground/blob/main/build-logic/src/main/kotlin/kipbuild.jextract.gradle.kts
     jextractFFM()
 }
 
