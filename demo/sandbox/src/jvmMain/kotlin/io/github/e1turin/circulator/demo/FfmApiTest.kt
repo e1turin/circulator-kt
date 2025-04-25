@@ -1,8 +1,8 @@
 package io.github.e1turin.circulator.demo
 
 import io.github.e1turin.circulator.demo.generated.DutModel
-import io.github.e1turin.circulator.demo.jextracted.dut_h
-import io.github.e1turin.circulator.demo.jextracted.State
+import io.github.krakowski.jextract.jextracted.dut_h
+import io.github.krakowski.jextract.jextracted.State
 import java.lang.foreign.Arena
 import java.lang.foreign.FunctionDescriptor
 import java.lang.foreign.Linker

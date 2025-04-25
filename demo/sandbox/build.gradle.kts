@@ -1,7 +1,9 @@
 import io.github.e1turin.circulator.config.*
+import io.github.krakowski.jextract.JextractTask
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 import org.jetbrains.kotlin.konan.target.HostManager
 import org.jetbrains.kotlin.konan.target.KonanTarget
 
@@ -9,6 +11,7 @@ plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.vanniktech.mavenPublish)
+    id("io.github.krakowski.jextract") version "0.5.0"
     id("circulator-plugin")
 }
 
@@ -83,16 +86,24 @@ circulator {
     // config(circulatorConfig)
 }
 
+tasks.jextract {
+    header("${project.projectDir}/src/jvmMain/resources/jextract/dut.h") {
+        targetPackage = "io.github.krakowski.jextract.jextracted"
+    }
+}
+
+tasks.withType<KotlinJvmCompile>() {
+    dependsOn(":sandbox:jextract")
+}
+
 java {
     sourceSets {
         val jvmMain by getting {
-            /*
-                TODO: move Java srcDir configuration to Jextract plugin
-                NOTE: there is curious bug with Kotlin srcDirs with Java sources in KMP:
-                      - https://youtrack.jetbrains.com/issue/KT-66642/KMP-Kotlin-compiler-can-resolve-references-from-Java-code-when-it-should-not
-            */
-            val jextracted = layout.buildDirectory.dir("generated/sources/jextract/jvmMain/java/")
-            java.srcDir(jextracted)
+            // Kakowski's Jextract plugin does not support KMP as I can see
+            // NOTE: there is curious bug with Kotlin srcDirs with Java sources in KMP:
+            //       - https://youtrack.jetbrains.com/issue/KT-66642/KMP-Kotlin-compiler-can-resolve-references-from-Java-code-when-it-should-not
+            val krakowskiJextracted = layout.buildDirectory.dir("generated/sources/jextract/main/java/")
+            java.srcDirs(krakowskiJextracted)
         }
     }
 }
