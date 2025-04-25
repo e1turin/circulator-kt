@@ -3,12 +3,12 @@ gradle-pluginPublish = "1.3.1"
 kotlin = "2.1.20"
 kotlin-multiplatform = "2.1.10"
 kotlin-poet = "2.1.0"
-kotlin-serialization-json = "1.8.0"
+kotlin-serialization = "1.8.1"
 mavenPublish = "0.29.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
-kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlin-serialization-json" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlin-serialization" }
 kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlin-poet" }
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 

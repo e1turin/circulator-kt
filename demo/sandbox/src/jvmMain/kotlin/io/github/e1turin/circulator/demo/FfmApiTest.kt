@@ -10,6 +10,11 @@ import java.lang.foreign.MemoryLayout
 import java.lang.foreign.SymbolLookup
 import java.lang.foreign.ValueLayout
 
+
+fun main() {
+    playWithFFM()
+}
+
 val libName = "model"
 val properLibName = System.mapLibraryName(libName) // 'model.dll' on Windows or 'libmodel.so' on linux
 

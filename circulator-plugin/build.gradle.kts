@@ -4,6 +4,7 @@ plugins {
     id("kotlin")
     `java-gradle-plugin`
     alias(libs.plugins.gradle.pluginPublish)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 group = "io.github.e1turin.circulator.plugin"
@@ -26,8 +27,9 @@ dependencies {
     implementation(project(":circulator-core"))
     implementation(libs.kotlin.gradle.plugin)
     implementation(libs.kotlinx.serialization.json)
-    implementation(libs.kotlin.test)
     implementation(libs.kotlinpoet)
+
+    testImplementation(libs.kotlin.test)
 }
 
 gradlePlugin {

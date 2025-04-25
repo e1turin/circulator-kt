@@ -1,0 +1,36 @@
+{ // JSON5 because it allows to use comments like this.
+    "models": {
+        "counter": {
+            /*
+              or multiline comments
+              like this
+             */
+            "package": "io.github.e1turin.circulator.demo.generated",
+            "state-file": "src/jvmMain/resources/arcilator/model-states.json",
+            "output": "build/generated/sources/circulator/jvmMain/kotlin",
+            "model": {
+                "open": true,
+                "all-states-open": true,
+                "all-states-mutable": true,
+                "all-states-type": [
+                    "input",
+                    "output",
+                    "register",
+                    "memory",
+                    "wire"
+                ],
+                "states": {
+                    "clkInternal": {
+                        "open": true,
+                        "mutable": true,
+                        "access": true
+                    }
+                }
+            },
+            "library": {
+                "open": true
+            }
+        }
+    },
+    "variables": {}
+}

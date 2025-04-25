@@ -20,9 +20,13 @@ kotlin {
             jvmTarget = JvmTarget.JVM_22
         }
 
-        @OptIn(ExperimentalKotlinGradlePluginApi::class) binaries {
+        @OptIn(ExperimentalKotlinGradlePluginApi::class)
+        binaries {
+            executable(KotlinCompilation.MAIN_COMPILATION_NAME, "pluginConfig") {
+                mainClass = "io.github.e1turin.circulator.demo.PluginConfigKt"
+            }
             executable(KotlinCompilation.MAIN_COMPILATION_NAME, "counter") {
-                mainClass = "io.github.e1turin.circulator.demo.MainKt"
+                mainClass = "io.github.e1turin.circulator.demo.FfmApiTestKt"
             }
         }
     }
@@ -30,6 +34,9 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation(libs.kotlinx.serialization.json)
+
+                implementation("com.akuleshov7:ktoml-core:0.6.0")
+                implementation("com.akuleshov7:ktoml-file:0.6.0")
 
                 implementation("io.github.e1turin.circulator:circulator-core:0.0.1")
             }
@@ -40,7 +47,9 @@ kotlin {
             }
         }
         val jvmMain by getting {
-            dependencies {}
+            dependencies {
+                implementation("io.github.e1turin.circulator.plugin:circulator-plugin:0.0.1")
+            }
         }
     }
 }
