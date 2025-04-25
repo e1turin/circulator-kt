@@ -4,6 +4,7 @@ import io.github.e1turin.circulator.state.StateProjectionType
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import java.io.File
 
 
 public typealias ConfigFile = PluginConfig
@@ -24,7 +25,8 @@ public data class ModelConfig(
     val packageName: String = "io.github.e1turin.circulator.generated",
 
     @SerialName("state-file")
-    val stateFilePath: String,
+    @Serializable(with = FileSerializer::class)
+    val stateFile: File,
 
     @SerialName("output")
     val outputDirPath: String? = null,

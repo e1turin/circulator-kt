@@ -1,3 +1,4 @@
+import io.github.e1turin.circulator.config.*
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
@@ -35,9 +36,6 @@ kotlin {
             dependencies {
                 implementation(libs.kotlinx.serialization.json)
 
-                implementation("com.akuleshov7:ktoml-core:0.6.0")
-                implementation("com.akuleshov7:ktoml-file:0.6.0")
-
                 implementation("io.github.e1turin.circulator:circulator-core:0.0.1")
             }
         }
@@ -54,11 +52,35 @@ kotlin {
     }
 }
 
-
+val circulatorConfig = PluginConfig(
+    models = mapOf(
+        "counter" to ModelConfig(
+            packageName = "io.github.e1turin.circulator.demo.generated",
+            stateFile = File("src/jvmMain/resources/arcilator/model-states.json"),
+            outputDirPath = "build/generated/sources/circulator/jvmMain/kotlin",
+            modelOptions = ModelOptions(
+                open = true,
+                allStatesOpen = true,
+                allStatesMutable = true,
+                allStatesType = listOf(StateType.INPUT, StateType.OUTPUT),
+                states = mapOf(
+                    "clkInternal" to StateAttributes(
+                        open = true,
+                        mutable = true,
+                        access = true
+                    )
+                )
+            ),
+            libraryOptions = LibraryOptions(
+                open = true,
+            )
+        )
+    )
+)
 circulator {
-    packageName = "io.github.e1turin.circulator.demo.generated"
-    stateFile = file("src/jvmMain/resources/arcilator/model-states.json")
-    outputDir = layout.buildDirectory.dir("generated/sources/circulator/jvmMain/kotlin/").get()
+    config(file("src/jvmMain/resources/circulator/config.json5"))
+    // or else
+    // config(circulatorConfig)
 }
 
 java {

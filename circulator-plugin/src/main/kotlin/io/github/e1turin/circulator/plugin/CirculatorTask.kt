@@ -1,53 +1,55 @@
 package io.github.e1turin.circulator.plugin
 
+import io.github.e1turin.circulator.config.PluginConfig
+import io.github.e1turin.circulator.config.StateType
 import io.github.e1turin.circulator.gen.generateFileSpec
 import io.github.e1turin.circulator.interop.arcilator.StateFile
-import kotlinx.serialization.json.Json
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.Directory
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFile
+import org.gradle.api.file.FileCollection
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
-import java.io.File
-import java.nio.file.Paths
-import kotlin.io.readText
 
-public abstract class CirculatorGenerateWrapperTask() : DefaultTask() {
+public abstract class CirculatorGenerateWrappersTask() : DefaultTask() {
+    @Internal
+    public var config: PluginConfig? = null
 
-    @Input
-    public var packageName: String = "io.github.e1turin.circulator.generated"
-
-    @InputFile
-    public var stateFile: File? = null
+    @get:InputFiles
+    public var stateFiles: FileCollection? = null
 
     @OutputDirectory
-    public var outputDir: Directory =
-        project.layout.buildDirectory.dir("generated/sources/circulator/jvmMain/kotlin/").get()
+    public var outputDir: Directory = project.circulatorDefaultBuildDir
 
     @TaskAction
     public fun generateModelWrappers() {
-        logger.debug("packageName = $packageName")
-        logger.debug("stateFilePath = ${stateFile?.absolutePath}")
-        logger.debug("outputDir = ${outputDir.asFile.absolutePath}")
-        logger.debug("jextractOutputDir = ${outputDir.asFile.absolutePath}")
+        logger.debug("stateFiles = {}", stateFiles?.map { it.absolutePath })
+        logger.debug("outputDir = {}", outputDir)
 
-        require(stateFile != null) { "Arcilator's state file must be defined" }
+        if (stateFiles == null) logger.info("No state files found for generation")
+        if (config == null) logger.warn("No config provided")
 
-        val json = stateFile!!.readText()
+        config?.models?.forEach { (id, cfg) ->
+            logger.debug("Model(modelId = {} packageName = {})", id, cfg.packageName)
 
-        val models: StateFile = Json.decodeFromString(json)
+            val stateFile = cfg.stateFile
+            val json = stateFile.readText()
 
-        for (model in models) {
-            // TODO: move configuration to extension
-            val fs = generateFileSpec(model, packageName) {
-                openModelClass = true
-                openLibraryClass = true
-                internalStateProjections = true
-                allStateProjectionsOpen = true
-                allStateProjectionsMutable = true
+            val models: StateFile = circulatorJsonFormat.decodeFromString(json)
+
+            for (model in models) {
+                val fs = generateFileSpec(model, cfg.packageName) {
+                    openModelClass = cfg.modelOptions.open
+                    openLibraryClass = cfg.libraryOptions.open
+                    // TODO: Propagate config for state types
+                    internalStateProjections = cfg.modelOptions.allStatesType.toSet()
+                        .containsAll(listOf(StateType.REGISTER, StateType.WIRE, StateType.MEMORY))
+                    allStateProjectionsOpen = cfg.modelOptions.allStatesOpen
+                    allStateProjectionsMutable = cfg.modelOptions.allStatesMutable
+                }
+                fs.writeTo(outputDir.asFile.toPath())
             }
-            fs.writeTo(Paths.get(outputDir.asFile.absolutePath))
         }
     }
 }

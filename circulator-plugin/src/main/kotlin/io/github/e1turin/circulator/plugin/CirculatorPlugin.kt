@@ -6,6 +6,7 @@ import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
+
 public class CirculatorPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         val ext = project.extensions.create("circulator", CirculatorExtension::class.java)
@@ -22,7 +23,7 @@ public class CirculatorPlugin : Plugin<Project> {
                     if (name == "jvm") {
                         val mainSourceSet = kotlin.sourceSets.getByName("${name}Main")
 
-                        mainSourceSet.kotlin.srcDir(ext.outputDir)
+                        mainSourceSet.kotlin.srcDir(project.circulatorDefaultBuildDir)
                         mainSourceSet.resources.srcDir("src/circulator/resources")
 
                         p.tasks.withType(KotlinJvmCompile::class.java).configureEach {
@@ -35,14 +36,18 @@ public class CirculatorPlugin : Plugin<Project> {
     }
 
     private fun makeGenerateWrappersTask(
-        project: Project, extension: CirculatorExtension
-    ): TaskProvider<CirculatorGenerateWrapperTask> {
+        project: Project,
+        extension: CirculatorExtension
+    ): TaskProvider<CirculatorGenerateWrappersTask> {
         val generateTask = project.tasks.register(
-            "generateCirculatorWrappers", CirculatorGenerateWrapperTask::class.java
-        ) {
-            it.packageName = extension.packageName
-            it.stateFile = extension.stateFile
-            it.outputDir = extension.outputDir
+            "circulatorGenWrappers", CirculatorGenerateWrappersTask::class.java
+        ) { task ->
+            extension.config?.let { config ->
+                val stateFiles = config.models.map { (id, model) -> model.stateFile.name }
+
+                task.stateFiles = project.files(*stateFiles.toTypedArray()) // TODO: check reaction
+                task.config = config
+            } ?: throw IllegalArgumentException("Circulator config could not be found")
         }
 
         return generateTask

@@ -274,15 +274,15 @@ internal class ModelClassGenerator(
 
 }
 
-public class GeneratorSettings(
-    public var openModelClass: Boolean = false,
-    public var openLibraryClass: Boolean = false,
-    public var internalStateProjections: Boolean = false,
-    public var allStateProjectionsOpen: Boolean = false,
-    public var allStateProjectionsMutable: Boolean = false,
+internal class GeneratorSettings(
+    var openModelClass: Boolean = false,
+    var openLibraryClass: Boolean = false,
+    var internalStateProjections: Boolean = false,
+    var allStateProjectionsOpen: Boolean = false,
+    var allStateProjectionsMutable: Boolean = false,
 )
 
-public fun generateFileSpec(modelInfo: ModelInfo, packageName: String, settings: GeneratorSettings.() -> Unit = {}): FileSpec {
+internal fun generateFileSpec(modelInfo: ModelInfo, packageName: String, settings: GeneratorSettings.() -> Unit = {}): FileSpec {
     val settings = GeneratorSettings().apply(settings)
 
     val gen = ModelClassGenerator(

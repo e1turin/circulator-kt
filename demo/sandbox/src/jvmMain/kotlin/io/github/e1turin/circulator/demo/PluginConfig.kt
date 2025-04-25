@@ -1,8 +1,8 @@
 package io.github.e1turin.circulator.demo
 
 import io.github.e1turin.circulator.config.*
+import io.github.e1turin.circulator.plugin.circulatorJsonFormat
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.json.Json
 import java.io.File
 
 @ExperimentalSerializationApi
@@ -10,7 +10,7 @@ fun main(args: Array<String>) {
     val models = mapOf(
         "counter" to ModelConfig(
             packageName = "io.github.e1turin.circulator.demo.generated",
-            stateFilePath = "src/jvmMain/resources/arcilator/model-states.json",
+            stateFile = File("src/jvmMain/resources/arcilator/model-states.json"),
             outputDirPath = "build/generated/sources/circulator/jvmMain/kotlin",
             modelOptions = ModelOptions(
                 open = true,
@@ -40,23 +40,16 @@ fun main(args: Array<String>) {
     assert(loadedConfig == config)
 }
 
-@OptIn(ExperimentalSerializationApi::class)
-val jsonFormat = Json {
-    encodeDefaults = true
-    prettyPrint = true
-    allowComments = true
-}
-
 val file = File("src/jvmMain/resources/circulator/config.json5")
 
 private fun dumpJson(config: PluginConfig) {
-    val json = jsonFormat.encodeToString(config)
+    val json = circulatorJsonFormat.encodeToString(config)
     println(json)
     file.writeText(json)
 }
 
 private fun loadJsonConfig(): PluginConfig {
     val json = file.readText()
-    val config = jsonFormat.decodeFromString<PluginConfig>(json)
+    val config = circulatorJsonFormat.decodeFromString<PluginConfig>(json)
     return config
 }

@@ -1,17 +1,21 @@
 package io.github.e1turin.circulator.plugin
 
+import io.github.e1turin.circulator.config.PluginConfig
 import org.gradle.api.Project
-import org.gradle.api.file.Directory
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.OutputDirectory
 import java.io.File
 import javax.inject.Inject
 
 public abstract class CirculatorExtension @Inject constructor(project: Project) {
-    public var packageName: String = "io.github.e1turin.circulator.generated"
+    public fun config(file: File) {
+        check(config == null) { "Circulator is already configured" }
+        config = deserializeConfig(file)
+    }
 
-    public var stateFile: File? = null
+    public fun config(setup: PluginConfig) {
+        check(config == null) { "Circulator is already configured" }
+        config = setup
+    }
 
-    public var outputDir: Directory = project.layout.buildDirectory.dir("generated/sources/circulator/jvmMain/kotlin/").get()
+    public var config: PluginConfig? = null
+        private set
 }
