@@ -1,5 +1,4 @@
 import io.github.e1turin.circulator.config.*
-import io.github.krakowski.jextract.JextractTask
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
@@ -12,11 +11,8 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.vanniktech.mavenPublish)
     id("io.github.krakowski.jextract") version "0.5.0"
-    id("circulator-plugin")
+    id("io.github.e1turin.circulator.plugin")
 }
-
-group = "io.github.e1turin.circulator"
-version = "0.0.1"
 
 kotlin {
     jvm {
@@ -49,41 +45,14 @@ kotlin {
         }
         val jvmMain by getting {
             dependencies {
-                implementation("io.github.e1turin.circulator.plugin:circulator-plugin:0.0.1")
+                implementation("io.github.e1turin.circulator:circulator-plugin:0.0.1")
             }
         }
     }
 }
 
-val circulatorConfig = PluginConfig(
-    models = mapOf(
-        "counter" to ModelConfig(
-            packageName = "io.github.e1turin.circulator.demo.generated",
-            stateFile = File("src/jvmMain/resources/arcilator/model-states.json"),
-            outputDirPath = "build/generated/sources/circulator/jvmMain/kotlin",
-            modelOptions = ModelOptions(
-                open = true,
-                allStatesOpen = true,
-                allStatesMutable = true,
-                allStatesType = listOf(StateType.INPUT, StateType.OUTPUT),
-                states = mapOf(
-                    "clkInternal" to StateAttributes(
-                        open = true,
-                        mutable = true,
-                        access = true
-                    )
-                )
-            ),
-            libraryOptions = LibraryOptions(
-                open = true,
-            )
-        )
-    )
-)
 circulator {
     config(file("src/jvmMain/resources/circulator/config.json5"))
-    // or else
-    // config(circulatorConfig)
 }
 
 tasks.jextract {

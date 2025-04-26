@@ -7,16 +7,6 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
-group = "io.github.e1turin.circulator.plugin"
-version = "0.0.1"
-
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-}
-
 kotlin {
     explicitApi = ExplicitApiMode.Strict
 
@@ -35,7 +25,7 @@ dependencies {
 gradlePlugin {
     plugins {
         create("circulatorPlugin") {
-            id = "circulator-plugin"
+            id = "io.github.e1turin.circulator.plugin"
             implementationClass = "io.github.e1turin.circulator.plugin.CirculatorPlugin"
         }
     }
