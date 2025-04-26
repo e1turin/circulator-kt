@@ -35,7 +35,7 @@ kotlin {
             dependencies {
                 implementation(libs.kotlinx.serialization.json)
 
-                implementation("io.github.e1turin.circulator:circulator-core:0.0.1")
+                implementation("io.github.e1turin.circulator:circulator-core:0.1.0")
             }
         }
         val commonTest by getting {
@@ -45,7 +45,7 @@ kotlin {
         }
         val jvmMain by getting {
             dependencies {
-                implementation("io.github.e1turin.circulator:circulator-plugin:0.0.1")
+                implementation("io.github.e1turin.circulator:circulator-plugin:0.1.0")
             }
         }
     }

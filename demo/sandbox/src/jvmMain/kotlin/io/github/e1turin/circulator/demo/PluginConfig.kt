@@ -5,6 +5,7 @@ import io.github.e1turin.circulator.plugin.circulatorJsonFormat
 import kotlinx.serialization.ExperimentalSerializationApi
 import java.io.File
 
+// TODO: Move to plugin test
 @ExperimentalSerializationApi
 fun main(args: Array<String>) {
     val models = mapOf(

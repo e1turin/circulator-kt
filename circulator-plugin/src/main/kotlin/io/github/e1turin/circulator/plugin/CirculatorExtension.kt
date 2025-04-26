@@ -11,9 +11,9 @@ public abstract class CirculatorExtension @Inject constructor(project: Project) 
         config = deserializeConfig(file)
     }
 
-    public fun config(setup: PluginConfig) {
+    public fun config(hierarchy: PluginConfig) {
         check(config == null) { "Circulator is already configured" }
-        config = setup
+        config = hierarchy
     }
 
     public var config: PluginConfig? = null
