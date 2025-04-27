@@ -69,5 +69,3 @@ public data class StateAttributes(
 public data class LibraryOptions(
     public val open: Boolean = false,
 )
-
-

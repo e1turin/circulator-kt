@@ -1,4 +1,3 @@
-import io.github.e1turin.circulator.config.*
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
@@ -55,14 +54,35 @@ circulator {
     config(file("src/jvmMain/resources/circulator/config.json5"))
 }
 
-tasks.jextract {
-    header("${project.projectDir}/src/jvmMain/resources/jextract/dut.h") {
-        targetPackage = "io.github.krakowski.jextract.jextracted"
+with(tasks) {
+    // setup jextract plugin task
+    jextract {
+        header("${project.projectDir}/src/jvmMain/resources/jextract/dut.h") {
+            targetPackage = "io.github.krakowski.jextract.jextracted"
+        }
     }
-}
 
-tasks.withType<KotlinJvmCompile>() {
-    dependsOn(":sandbox:jextract")
+    withType<KotlinJvmCompile>() {
+        dependsOn(":sandbox:jextract")
+    }
+
+    // allow JVM access native libraries with FFM API
+    withType<JavaExec>().configureEach {
+        jvmArgs("--enable-native-access=ALL-UNNAMED")
+
+        val dynLibPath = "${projectDir}/src/jvmMain/resources/circulator/lib/counter/"
+
+        when (val host = HostManager.host) {
+            // by some reason setting up java.library.path variable do not give result
+            KonanTarget.LINUX_X64 -> environment("LD_LIBRARY_PATH", dynLibPath)
+
+            KonanTarget.MINGW_X64 -> jvmArgs("-Djava.library.path=${dynLibPath}")
+
+            KonanTarget.MACOS_X64, KonanTarget.MACOS_ARM64 -> environment("DYLD_LIBRARY_PATH", dynLibPath)
+
+            else -> error("Unknown host: $host")
+        }
+    }
 }
 
 java {
@@ -75,24 +95,5 @@ java {
             java.srcDirs(krakowskiJextracted)
         }
     }
-}
-
-// allow JVM access native libraries with FFM API
-tasks.withType<JavaExec>().configureEach {
-    jvmArgs("--enable-native-access=ALL-UNNAMED")
-
-    val dynLibPath = "${projectDir}/src/jvmMain/resources/lib/counter/"
-
-    when (val host = HostManager.host) {
-        // by some reason setting up java.library.path variable do not give result
-        KonanTarget.LINUX_X64 -> environment("LD_LIBRARY_PATH", dynLibPath)
-
-        KonanTarget.MINGW_X64 -> jvmArgs("-Djava.library.path=${dynLibPath}")
-
-        KonanTarget.MACOS_X64, KonanTarget.MACOS_ARM64 -> environment("DYLD_LIBRARY_PATH", dynLibPath)
-
-        else -> error("Unknown host: $host")
-    }
-
 }
 

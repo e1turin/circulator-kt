@@ -8,8 +8,13 @@ import org.gradle.api.Project
 import org.gradle.api.file.Directory
 import java.io.File
 
-public val Project.circulatorDefaultBuildDir: Directory // TODO: support not only KMP (jvmMain)
+// TODO: support not only KMP (jvmMain)
+public val Project.circulatorDefaultBuildDir: Directory
     get() = layout.buildDirectory.dir("generated/sources/circulator/jvmMain/kotlin/").get()
+
+// TODO: use more standard directory, like resources directory in KMP
+public val Project.circulatorDefaultResourcesDir: Directory
+    get() = layout.projectDirectory.dir("src/circulator/resources")
 
 @OptIn(ExperimentalSerializationApi::class)
 public val circulatorJsonFormat: Json = Json {
