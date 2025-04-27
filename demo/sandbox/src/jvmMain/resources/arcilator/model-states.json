@@ -1,0 +1,52 @@
+[
+  {
+    "name": "Dut",
+    "numStateBytes": 8,
+    "initialFnSym": "",
+    "finalFnSym": "",
+    "states": [
+      {
+        "name": "clk",
+        "offset": 0,
+        "numBits": 1,
+        "type": "input"
+      },
+      {
+        "name": "reset",
+        "offset": 1,
+        "numBits": 1,
+        "type": "input"
+      },
+      {
+        "name": "clk",
+        "offset": 2,
+        "numBits": 1,
+        "type": "wire"
+      },
+      {
+        "name": "reset",
+        "offset": 3,
+        "numBits": 1,
+        "type": "wire"
+      },
+      {
+        "name": "reg",
+        "offset": 5,
+        "numBits": 8,
+        "type": "register"
+      },
+      {
+        "name": "o",
+        "offset": 6,
+        "numBits": 8,
+        "type": "wire"
+      },
+      {
+        "name": "o",
+        "offset": 7,
+        "numBits": 8,
+        "type": "output"
+      }
+    ]
+  }
+]
