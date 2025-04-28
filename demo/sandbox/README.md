@@ -1,27 +1,22 @@
 # Demo of using library for running model of simple counter
 
-Sample output:
+Sample output for `gradlew :sandbox:runJvmCounter`:
 
 ```console
-:sandbox:runJvmCounter
 Hello JVM World!
-proper library name: libmodel.dylib
-library search path: /Users/username/Projects/circulator-kt/demo/sandbox/src/jvmMain/resources/lib/counter/:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java:.
+
+proper library name: libcounter.dylib
+library search path: /Users/user/Projects/circulator-kt/demo/sandbox/src/jvmMain/resources/circulator/libs/counter/:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java:.
+
 Hello Raw FFM World!
-Dut.o=10
-
- - - - 
-
-Hello my FFM World!
 dut.o=10
 
- - - - 
-
-Hello generated FFM World!
+Hello My FFM World!
 dut.o=10
 
- - - - 
+Hello Circulator FFM World!
+dut.o=10
 
 Hello Jextract FFM World!
-Dut.o=10
+dut.o=10
 ```

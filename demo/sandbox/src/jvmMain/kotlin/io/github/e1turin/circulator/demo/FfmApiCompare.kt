@@ -15,36 +15,33 @@ fun main() {
     playWithFFM()
 }
 
-val libName = "model"
-val properLibName = System.mapLibraryName(libName) // 'model.dll' on Windows or 'libmodel.so' on linux
+val libName = "counter"
+val properLibName = System.mapLibraryName(libName) // 'counter.dll' on Windows or 'libcounter.so' on linux
 
 fun playWithFFM() {
-    println("Hello JVM World!")
+    println("Hello JVM World!\n")
+
+    println("proper library name: $properLibName")
+    println("library search path: ${System.getProperty("java.library.path")}\n")
 
     System.loadLibrary(libName) // required for Windows
 
-    println("proper library name: $properLibName")
-    println("library search path: ${System.getProperty("java.library.path")}")
+    println("Hello Raw FFM World!")
+    println("dut.o=${rawFfm()}\n")
 
-    rawFFM()
+    println("Hello My FFM World!")
+    println("dut.o=${myFfmWrapper()}\n")
 
-    println("\n - - - \n")
+    println("Hello Circulator FFM World!")
+    println("dut.o=${circulatorFfmWrapper()}\n")
 
-    myFfmWrapper()
-
-    println("\n - - - \n")
-
-    generatedFfmWrapper()
-
-    println("\n - - - \n")
-
-    jextractFFM()
+    println("Hello Jextract FFM World!")
+    println("dut.o=${jextractFfm()}")
 }
 
-private fun generatedFfmWrapper() {
-    println("Hello generated FFM World!")
+fun circulatorFfmWrapper(): Int {
     Arena.ofConfined().use { arena ->
-        val dut = DutModel.instance(arena, "model")
+        val dut = DutModel.instance(arena, libName)
 
         fun DutModel.step(times: Int = 1) {
             for (i in 1..times) {
@@ -65,14 +62,13 @@ private fun generatedFfmWrapper() {
         dut.reset(10)
         dut.step(10)
 
-        println("dut.o=${dut.o}")
+        return dut.o.toInt()
     }
 }
 
-private fun myFfmWrapper() {
-    println("Hello my FFM World!")
+fun myFfmWrapper(): Int {
     Arena.ofConfined().use { arena ->
-        val dut = Dut.instance(arena, "model")
+        val dut = Dut.instance(arena, libName)
 
         fun Dut.step(times: Int = 1) {
             for (i in 1..times) {
@@ -93,13 +89,11 @@ private fun myFfmWrapper() {
         dut.reset(10)
         dut.step(10)
 
-        println("dut.o=${dut.o}")
+        return dut.o.toInt()
     }
 }
 
-private fun rawFFM() {
-    println("Hello Raw FFM World!")
-
+fun rawFfm(): Int {
     val lookup = SymbolLookup.libraryLookup(properLibName, Arena.ofAuto())
         .or(SymbolLookup.loaderLookup())
         .or(Linker.nativeLinker().defaultLookup())
@@ -136,13 +130,11 @@ private fun rawFFM() {
             state[ValueLayout.JAVA_BYTE, 0] = 0
             dutEval.invokeExact(state)
         }
-        println("Dut.o=${state[ValueLayout.JAVA_BYTE, 7]}")
+        return state[ValueLayout.JAVA_BYTE, 7].toInt()
     }
 }
 
-private fun jextractFFM() {
-    println("Hello Jextract FFM World!")
-
+fun jextractFfm(): Int {
     Arena.ofConfined().use {
         val state = it.allocate(State.layout())
 
@@ -161,6 +153,6 @@ private fun jextractFFM() {
             State.clk(state, 0)
             dut_h.Dut_eval(state)
         }
-        println("Dut.o=${state[ValueLayout.JAVA_BYTE, 7]}")
+        return state[ValueLayout.JAVA_BYTE, 7].toInt()
     }
 }
