@@ -10,4 +10,4 @@ struct State {         // sizeof State == 8
   char o;              // +7
 };
 
-extern void Dut_eval(void *state);
+extern void Counter_eval(void *state);

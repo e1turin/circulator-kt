@@ -1,6 +1,6 @@
 [
   {
-    "name": "Dut",
+    "name": "Counter",
     "numStateBytes": 8,
     "initialFnSym": "",
     "finalFnSym": "",

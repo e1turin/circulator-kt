@@ -53,7 +53,7 @@ circulator {
 
 // setup jextract plugin task
 tasks.jextract {
-    header("${project.projectDir}/src/jvmMain/resources/jextract/dut.h") {
+    header("${project.projectDir}/src/jvmMain/resources/jextract/counter.h") {
         targetPackage = "io.github.krakowski.jextract.jextracted"
     }
 }
@@ -78,15 +78,16 @@ java {
 fun JavaForkOptions.setupLibraryPath() {
     jvmArgs("--enable-native-access=ALL-UNNAMED")
 
-    val dynLibPath = "${projectDir}/src/jvmMain/resources/circulator/libs/counter/"
+    val dynLibPath = "${projectDir}/src/jvmMain/resources/circulator/libs/counter"
+
     when (val host = HostManager.host) {
         // by some reason setting the java.library.path variable does not lead to the goal
-        KonanTarget.LINUX_X64 -> environment("LD_LIBRARY_PATH", dynLibPath)
+        KonanTarget.LINUX_X64 -> environment("LD_LIBRARY_PATH", "$dynLibPath/x64")
 
-        KonanTarget.MINGW_X64 -> jvmArgs("-Djava.library.path=${dynLibPath}")
+        KonanTarget.MINGW_X64 -> jvmArgs("-Djava.library.path=${dynLibPath}/64")
 
-        KonanTarget.MACOS_X64,
-        KonanTarget.MACOS_ARM64 -> environment("DYLD_LIBRARY_PATH", dynLibPath)
+        KonanTarget.MACOS_X64 -> environment("DYLD_LIBRARY_PATH", "$dynLibPath/x64")
+        KonanTarget.MACOS_ARM64 -> environment("DYLD_LIBRARY_PATH", "$dynLibPath/arm64")
 
         else -> error("Unknown host: $host")
     }

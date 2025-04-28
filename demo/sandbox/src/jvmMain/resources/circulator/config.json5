@@ -7,7 +7,7 @@
         like this
        */
       "package": "io.github.e1turin.circulator.demo.generated",
-      "state-file": "src/jvmMain/resources/arcilator/model-states.json",
+      "state-file": "src/jvmMain/resources/arcilator/counter-states.json",
       "output": "build/generated/sources/circulator/jvmMain/kotlin",
       "model": {
         "open": true,

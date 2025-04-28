@@ -102,7 +102,7 @@ open class Dut(
 
     companion object {
         /* "name": "Dut", */
-        const val MODEL_NAME: String = "Dut"
+        const val MODEL_NAME: String = "Counter"
 
         /* "numStateBytes": 8, */
         const val NUM_STATE_BYTES: Long = 8
@@ -118,7 +118,7 @@ class DutLibrary(name: String, arena: Arena = Arena.ofAuto()) : ModelLibrary(
     name,
     arena,
     /* "name": "Dut", */
-    evalFnSym = "Dut_eval",
+    evalFnSym = "Counter_eval",
     /* "initialFnSym": "", */
     initialFnSym = "",
     /* "finalFnSym": "", */

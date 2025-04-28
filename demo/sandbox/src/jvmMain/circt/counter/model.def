@@ -1,3 +1,0 @@
-LIBRARY model
-EXPORTS
-    Dut_eval
