@@ -48,7 +48,7 @@ kotlin {
 }
 
 circulator {
-    config(file("src/jvmMain/resources/circulator/config.json5"))
+    config = file("src/jvmMain/resources/circulator/config.json5")
 }
 
 // setup jextract plugin task
@@ -74,7 +74,7 @@ java {
     }
 }
 
-// allow JVM access to native libraries using the FFM API
+// Share config for allowing JVM to access native libraries using the FFM API
 fun JavaForkOptions.setupLibraryPath() {
     jvmArgs("--enable-native-access=ALL-UNNAMED")
 

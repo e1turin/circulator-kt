@@ -6,32 +6,37 @@ import io.github.e1turin.circulator.gen.generateFileSpec
 import io.github.e1turin.circulator.interop.arcilator.StateFile
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.Directory
-import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFile
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 
 public abstract class CirculatorGenerateWrappersTask() : DefaultTask() {
-    @Internal
-    public var config: PluginConfig? = null
+    @get:InputFile
+    public abstract val configFile: RegularFileProperty
+
+    @get:Internal
+    public lateinit var config: PluginConfig
 
     @get:InputFiles
-    public var stateFiles: FileCollection? = null
+    public abstract val stateFiles: ListProperty<RegularFile>
 
     @OutputDirectory
     public var outputDir: Directory = project.circulatorDefaultBuildDir
 
     @TaskAction
     public fun generateModelWrappers() {
-        logger.debug("stateFiles = {}", stateFiles?.map { it.absolutePath })
+        logger.debug("stateFiles = {}", stateFiles.get().map { it.asFile.absolutePath })
         logger.debug("outputDir = {}", outputDir)
 
-        if (stateFiles == null) logger.info("No state files found for generation")
-        if (config == null) logger.warn("No config provided")
+        if (stateFiles.get().isEmpty()) logger.info("No state files found for generation")
 
-        config?.models?.forEach { (id, cfg) ->
-            logger.debug("Model(modelId = {} packageName = {})", id, cfg.packageName)
+        config.models.forEach { (id, cfg) ->
+            logger.debug("Model(modelId = {}, packageName = {})", id, cfg.packageName)
 
             val stateFile = cfg.stateFile
             val json = stateFile.readText()

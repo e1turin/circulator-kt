@@ -7,6 +7,8 @@ import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
+import kotlin.collections.component1
+import kotlin.collections.component2
 
 
 public class CirculatorPlugin : Plugin<Project> {
@@ -32,7 +34,7 @@ public class CirculatorPlugin : Plugin<Project> {
             val mainSourceSet = kmp.sourceSets.getByName("${it.name}Main")
 
             mainSourceSet.kotlin.srcDir(project.circulatorDefaultBuildDir)
-//            do i really need resources?
+//            do I really need resources?
 //            mainSourceSet.resources.srcDir(project.circulatorDefaultResourcesDir)
 
             makeKotlinJvmCompileTaskDependOn(genTask)
@@ -54,10 +56,17 @@ public class CirculatorPlugin : Plugin<Project> {
         val generateTask = project.tasks.register(
             "circulatorGenWrappers", CirculatorGenerateWrappersTask::class.java
         ) { task ->
-            val stateFiles = ext.config.models.map { (id, model) -> model.stateFile.name }
+            task.configFile.set(ext.config)
 
-            task.stateFiles = project.files(*stateFiles.toTypedArray())
-            task.config = ext.config
+            val config = deserializeConfig(ext.config.asFile.get())
+            task.config = config
+
+            val mentionedStateFiles = config.models.map { (_, model) ->
+                val fileProvider = project.provider { model.stateFile }
+                val regularFileProvider = project.layout.file(fileProvider)
+                regularFileProvider.get()
+            }
+            task.stateFiles.set(mentionedStateFiles)
         }
 
         return generateTask
