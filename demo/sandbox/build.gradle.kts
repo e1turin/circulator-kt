@@ -21,9 +21,6 @@ kotlin {
 
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
         binaries {
-            executable(KotlinCompilation.MAIN_COMPILATION_NAME, "pluginConfig") {
-                mainClass = "io.github.e1turin.circulator.demo.PluginConfigKt"
-            }
             executable(KotlinCompilation.MAIN_COMPILATION_NAME, "counter") {
                 mainClass = "io.github.e1turin.circulator.demo.FfmApiTestKt"
             }
