@@ -18,8 +18,6 @@ public abstract class ModelLibrary(
 
     public val symbolLookup: SymbolLookup = SymbolLookup
         .libraryLookup(libraryName, arena)
-        .or(SymbolLookup.loaderLookup())
-        .or(Linker.nativeLinker().defaultLookup())
 
     public abstract val evalFunctionHandle: MethodHandle
 
