@@ -24,5 +24,6 @@ dependencyResolutionManagement {
     }
 }
 
-include("sandbox")
+include("sandbox",
+        "sandbox:chisel")
 includeBuild("..")
