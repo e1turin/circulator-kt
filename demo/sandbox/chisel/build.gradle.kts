@@ -1,9 +1,17 @@
+import org.gradle.internal.os.OperatingSystem
 import org.jetbrains.kotlin.gradle.internal.ensureParentDirsCreated
 import kotlin.enums.enumEntries
-import org.gradle.internal.os.OperatingSystem
 
 plugins {
     scala
+    /* scala plugin interferes with kotlin plugin,
+     * cyclic dependency appears:
+     * 1. application requires kotlin classes produced by circulator's
+     *    pipeline starting from scala execution,
+     * 2. and scala requires java classes be ready but kotlin model is not (1).
+     */
+    // kotlin("jvm")
+    // application
     id("io.github.e1turin.circulator.plugin")
 }
 
@@ -16,7 +24,8 @@ dependencies {
     implementation("org.scala-lang:scala-library:2.13.15")
     implementation("org.chipsalliance:chisel_2.13:6.7.0")
     scalaCompilerPlugins("org.chipsalliance:chisel-plugin_2.13.15:6.7.0")
-    implementation("org.chipsalliance:firtool-resolver_2.13:2.0.1")
+//    implementation("org.chipsalliance:firtool-resolver_2.13:2.0.1")
+//    implementation("io.github.e1turin.circulator:circulator-core:0.1.0")
 }
 
 scala {
@@ -52,7 +61,7 @@ fun chisel(name: String, mainClass: String, jvmArgs: List<String> = emptyList())
         it.lowercase().replaceFirstChar { c -> c.uppercase() }
     }
 
-    val task = tasks.register<JavaExec>("produce${formattedName}Firrtl") {
+    val task = tasks.register<JavaExec>("compile${formattedName}Chisel") {
         group = "circulator"
         description = "Run Chisel FIRRTL producing for model $name"
         classpath = sourceSets["main"].runtimeClasspath
@@ -114,7 +123,8 @@ val firtoolInputFile = chiselOutputDir.file("counter/Counter.fir")
 val firtoolAction = FirtoolOutputAction.IrHw
 val firtoolOutputFile = firtoolOutputDir.file("Counter.${firtoolAction.fileExtension}")
 
-val compileFirrtl = tasks.register<Exec>("produceCounterMlir") {
+val compileFirrtl = tasks.register<Exec>("compileFirrtl") {
+    dependsOn(compileChisel)
 
     group = "circulator"
     description = "Run firtool on Chisel FIRRTL output"
@@ -140,7 +150,7 @@ enum class SourceLang {
     SystemC
 }
 
-val sourceHdl = SourceLang.Verilog
+val sourceHdl = SourceLang.Chisel
 
 enum class ArcilatorOutputAction(val flag: String, val fileExtension: String) {
     EmitLlvm("--emit-llvm", "ll"),
@@ -149,11 +159,11 @@ enum class ArcilatorOutputAction(val flag: String, val fileExtension: String) {
 }
 
 enum class ArcilatorObserveFlags(val flag: String) {
-//    ObserveMemories("--observe-memories"),
-//    ObserveNamedValues("--observe-named-values"),
+    ObserveMemories("--observe-memories"),
+    ObserveNamedValues("--observe-named-values"),
     ObservePorts("--observe-ports"),
-//    ObserveRegisters("--observe-registers"),
-//    ObserveWires("--observe-wires")
+    ObserveRegisters("--observe-registers"),
+    ObserveWires("--observe-wires")
 }
 
 val arcilatorAction = ArcilatorOutputAction.EmitLlvm
@@ -163,7 +173,7 @@ val arcilatorOutputStateFile = arcilatorOutputDir.file("counter/counter-states.j
 @OptIn(ExperimentalStdlibApi::class)
 val arcilatorObserves = enumEntries<ArcilatorObserveFlags>().map { it.flag }.toTypedArray()
 
-val produceLlvmTask = tasks.register<Exec>("produceCounterLlvm") {
+val compileCirctMlir = tasks.register<Exec>("compileCirctMlir") {
     when(sourceHdl) {
         SourceLang.Verilog -> dependsOn(compileVerilog)
         SourceLang.Chisel -> dependsOn(compileFirrtl)
@@ -247,15 +257,16 @@ sealed interface ClangPlatformBuild {
 val clangAction = ClangPlatformBuild.from("counter", arcilatorOutputFile.asFile)
 val clangOutputFile = clangOutputDir.file("counter/${clangAction.libName}")
 
-val produceBinaryTask = tasks.register<Exec>("produceCounterBinary") {
-    dependsOn(produceLlvmTask)
+val compileLlvm = tasks.register<Exec>("compileLlvm") {
+    dependsOn(compileCirctMlir)
 
     group = "circulator"
-    description = "Run clang on Verilog/LLVM output"
+    description = "Run clang on model in LLVM IR"
 
     inputs.file(arcilatorOutputFile)
     outputs.file(clangOutputFile)
 
+    // might emit warning as receiving llvm code not contains `target triple = "..."` line
     commandLine("clang", *clangAction.flags, "-o", clangOutputFile)
 }
 
@@ -264,13 +275,12 @@ circulator {
     config = file("src/main/resources/circulator.json5")
 }
 
-val genClassesTask = tasks.named("generateKotlinClasses") {
-    dependsOn(produceBinaryTask)
+val genKotlin = tasks.named("generateKotlinClasses") {
+    dependsOn(compileLlvm)
 }
 
-tasks.register("runPipeline") {
+val runFullPipeline = tasks.register("runFullPipeline") {
     group = "circulator"
     description = "Run the full hardware compilation pipeline"
-    dependsOn(genClassesTask)
+    dependsOn(genKotlin)
 }
-
