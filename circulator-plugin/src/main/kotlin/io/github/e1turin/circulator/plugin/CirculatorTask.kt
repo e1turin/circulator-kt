@@ -5,7 +5,7 @@ import io.github.e1turin.circulator.config.StateType
 import io.github.e1turin.circulator.gen.generateFileSpec
 import io.github.e1turin.circulator.interop.arcilator.StateFile
 import org.gradle.api.DefaultTask
-import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
@@ -25,8 +25,8 @@ public abstract class CirculatorGenerateWrappersTask() : DefaultTask() {
     @get:InputFiles
     public abstract val stateFiles: ListProperty<RegularFile>
 
-    @OutputDirectory
-    public var outputDir: Directory = project.circulatorDefaultBuildDir
+    @get:OutputDirectory
+    public abstract val outputDir: DirectoryProperty
 
     @TaskAction
     public fun generateModelWrappers() {
@@ -53,7 +53,7 @@ public abstract class CirculatorGenerateWrappersTask() : DefaultTask() {
                     allStateProjectionsOpen = cfg.modelOptions.allStatesOpen
                     allStateProjectionsMutable = cfg.modelOptions.allStatesMutable
                 }
-                fs.writeTo(outputDir.asFile.toPath())
+                fs.writeTo(outputDir.get().asFile.toPath())
             }
         }
     }

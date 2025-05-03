@@ -9,8 +9,11 @@ import org.gradle.api.file.Directory
 import java.io.File
 
 // TODO: support not only KMP (jvmMain)
-public val Project.circulatorDefaultBuildDir: Directory
+public val Project.circulatorDefaultKmpBuildDir: Directory
     get() = layout.buildDirectory.dir("generated/sources/circulator/jvmMain/kotlin/").get()
+
+public val Project.circulatorDefaultJvmBuildDir: Directory
+    get() = layout.buildDirectory.dir("generated/sources/circulator/main/kotlin/").get()
 
 // TODO: use more standard directory, like resources directory in KMP
 public val Project.circulatorDefaultResourcesDir: Directory

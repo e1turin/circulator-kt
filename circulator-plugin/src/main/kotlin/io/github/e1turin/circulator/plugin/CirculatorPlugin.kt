@@ -3,7 +3,9 @@ package io.github.e1turin.circulator.plugin
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.file.Directory
 import org.gradle.api.tasks.TaskProvider
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
@@ -12,28 +14,34 @@ import kotlin.collections.component2
 
 
 public class CirculatorPlugin : Plugin<Project> {
+    private lateinit var outputGenKotlinDir: Directory // TODO: refactor for kotlin project type
+
     override fun apply(project: Project) {
         val ext = project.extensions.create("circulator", CirculatorExtension::class.java)
 
-        val genTask = makeGenerateWrappersTask(project, ext)
+        val genTask = makeGenerateKotlinClassesTask(project, ext)
+        outputGenKotlinDir = project.circulatorDefaultJvmBuildDir
 
         project.afterEvaluate { p ->
-            p.plugins.withId("org.jetbrains.kotlin.multiplatform") {
-                p.setupKotlinMultiplatform(genTask)
-                // TODO: setupKotlinJvm
-            }
+            p.setupKotlinMultiplatform(genTask)
+            p.setupKotlinJvm(genTask)
         }
     }
 
-    private fun <T: Task> Project.setupKotlinMultiplatform(
+    /**
+     * Try to apply config for KMP project
+     */
+    private fun <T : Task> Project.setupKotlinMultiplatform(
         genTask: TaskProvider<T>,
-    ) {
+    ) = plugins.withId("org.jetbrains.kotlin.multiplatform") {
+
         val kmp = extensions.getByType(KotlinMultiplatformExtension::class.java)
 
         kmp.targets.withType(KotlinJvmTarget::class.java) {
             val mainSourceSet = kmp.sourceSets.getByName("${it.name}Main")
 
-            mainSourceSet.kotlin.srcDir(project.circulatorDefaultBuildDir)
+            outputGenKotlinDir = project.circulatorDefaultKmpBuildDir
+            mainSourceSet.kotlin.srcDir(outputGenKotlinDir!!)
 //            do I really need resources?
 //            mainSourceSet.resources.srcDir(project.circulatorDefaultResourcesDir)
 
@@ -41,7 +49,21 @@ public class CirculatorPlugin : Plugin<Project> {
         }
     }
 
-    private fun <T: Task> Project.makeKotlinJvmCompileTaskDependOn(
+    /**
+     * Try to apply config for JVM project
+     */
+    private fun <T : Task> Project.setupKotlinJvm(
+        genTask: TaskProvider<T>,
+    ) = plugins.withId("org.jetbrains.kotlin.jvm") {
+        val kotlinJvm = extensions.getByType(KotlinJvmExtension::class.java)
+        val mainSourceSet = kotlinJvm.sourceSets.getByName("main")
+
+        outputGenKotlinDir = project.circulatorDefaultJvmBuildDir
+        mainSourceSet.kotlin.srcDir(outputGenKotlinDir!!)
+        makeKotlinJvmCompileTaskDependOn(genTask)
+    }
+
+    private fun <T : Task> Project.makeKotlinJvmCompileTaskDependOn(
         task: TaskProvider<T>
     ) {
         tasks.withType(KotlinJvmCompile::class.java).configureEach {
@@ -49,7 +71,7 @@ public class CirculatorPlugin : Plugin<Project> {
         }
     }
 
-    private fun makeGenerateWrappersTask(
+    private fun makeGenerateKotlinClassesTask(
         project: Project,
         ext: CirculatorExtension
     ): TaskProvider<CirculatorGenerateWrappersTask> {
@@ -69,6 +91,8 @@ public class CirculatorPlugin : Plugin<Project> {
                 regularFileProvider.get()
             }
             task.stateFiles.set(mentionedStateFiles)
+
+            task.outputDir.set(outputGenKotlinDir)
         }
 
         return generateTask
