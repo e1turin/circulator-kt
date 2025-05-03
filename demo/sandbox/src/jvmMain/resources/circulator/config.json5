@@ -32,6 +32,33 @@
         "open": true
       }
     },
+    "counter-chisel": {
+      "package": "io.github.e1turin.circulator.demo.chisel.generated",
+      "state-file": "chisel/build/generated/sources/circulator/arcilator/counter/counter-states.json",
+      "output": "build/generated/sources/circulator/jvmMain/kotlin",
+      "model": {
+        "open": true,
+        "all-states-open": true,
+        "all-states-mutable": true,
+        "all-states-type": [
+          "input",
+          "output",
+          "register",
+          "memory",
+          "wire"
+        ],
+        "states": {
+          "clkInternal": {
+            "open": true,
+            "mutable": true,
+            "access": true
+          }
+        }
+      },
+      "library": {
+        "open": true
+      }
+    }
   },
   "variables": {}
 }

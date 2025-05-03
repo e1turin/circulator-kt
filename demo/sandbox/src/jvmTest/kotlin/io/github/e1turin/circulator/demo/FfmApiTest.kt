@@ -10,7 +10,13 @@ class FfmApiTest {
         val my = myFfmWrapper()
         val jextract = jextractFfm()
         val raw = rawFfm()
+        val chisel = chiselFfm()
 
-        assertTrue(circulator == my && my == jextract && jextract == raw)
+        assertTrue(
+            circulator == my
+                && my == jextract
+                && jextract == raw
+                && raw == chisel
+        )
     }
 }

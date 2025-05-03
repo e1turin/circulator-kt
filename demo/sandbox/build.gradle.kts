@@ -58,7 +58,7 @@ tasks.jextract {
     }
 }
 
-tasks.withType<KotlinJvmCompile>() {
+tasks.withType<KotlinJvmCompile> {
     dependsOn(":sandbox:jextract")
 }
 
@@ -78,8 +78,9 @@ java {
 fun JavaForkOptions.setupLibraryPath() {
     jvmArgs("--enable-native-access=ALL-UNNAMED")
 
-    val dynLibPath = "${projectDir}/src/jvmMain/resources/circulator/libs/counter"
+    val dynLibPathChisel = "${projectDir}/chisel/build/generated/sources/circulator/clang/counter"
 
+    val dynLibPath = "${projectDir}/src/jvmMain/resources/circulator/libs/counter"
     when (val host = HostManager.host) {
         // by some reason setting the java.library.path variable does not lead to the goal
         KonanTarget.LINUX_X64 -> environment("LD_LIBRARY_PATH", "$dynLibPath/x64")
@@ -87,7 +88,7 @@ fun JavaForkOptions.setupLibraryPath() {
         KonanTarget.MINGW_X64 -> jvmArgs("-Djava.library.path=${dynLibPath}/64")
 
         KonanTarget.MACOS_X64 -> environment("DYLD_LIBRARY_PATH", "$dynLibPath/x64")
-        KonanTarget.MACOS_ARM64 -> environment("DYLD_LIBRARY_PATH", "$dynLibPath/arm64")
+        KonanTarget.MACOS_ARM64 -> environment("DYLD_LIBRARY_PATH", "$dynLibPath/arm64:$dynLibPathChisel")
 
         else -> error("Unknown host: $host")
     }
@@ -100,4 +101,3 @@ tasks.withType<JavaExec>().configureEach {
 tasks.withType<Test>().configureEach {
     setupLibraryPath()
 }
-

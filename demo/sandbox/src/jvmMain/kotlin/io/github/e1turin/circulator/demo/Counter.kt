@@ -100,18 +100,28 @@ open class Dut(
         lib.finalFunctionHandle.invokeExact(state)
     }
 
-    companion object {
+    companion object : Factory<Dut> {
         /* "name": "Dut", */
         const val MODEL_NAME: String = "Counter"
 
         /* "numStateBytes": 8, */
         const val NUM_STATE_BYTES: Long = 8
 
-        fun instance(arena: Arena, libraryName: String, libraryArena: Arena = Arena.ofAuto()): Dut = Dut(
+        const val LIBRARY_NAME: String = "counter"
+
+        fun instance(arena: Arena, libraryName: String = LIBRARY_NAME, libraryArena: Arena = Arena.ofAuto()): Dut = Dut(
             arena.allocate(NUM_STATE_BYTES),
             DutLibrary(libraryName, libraryArena)
         )
+
+        override fun build(arena: Arena): Dut {
+            return instance(arena)
+        }
     }
+}
+
+interface Factory<T> {
+    fun build(modelArena: Arena): T
 }
 
 class DutLibrary(name: String, arena: Arena = Arena.ofAuto()) : ModelLibrary(
@@ -131,3 +141,4 @@ class DutLibrary(name: String, arena: Arena = Arena.ofAuto()) : ModelLibrary(
     override val finalFunctionHandle: MethodHandle
         get() = TODO("Not yet implemented")
 }
+

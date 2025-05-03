@@ -12,7 +12,6 @@ plugins {
      */
     // kotlin("jvm")
     // application
-    id("io.github.e1turin.circulator.plugin")
 }
 
 repositories {
@@ -24,8 +23,6 @@ dependencies {
     implementation("org.scala-lang:scala-library:2.13.15")
     implementation("org.chipsalliance:chisel_2.13:6.7.0")
     scalaCompilerPlugins("org.chipsalliance:chisel-plugin_2.13.15:6.7.0")
-//    implementation("org.chipsalliance:firtool-resolver_2.13:2.0.1")
-//    implementation("io.github.e1turin.circulator:circulator-core:0.1.0")
 }
 
 scala {
@@ -66,6 +63,7 @@ fun chisel(name: String, mainClass: String, jvmArgs: List<String> = emptyList())
         description = "Run Chisel FIRRTL producing for model $name"
         classpath = sourceSets["main"].runtimeClasspath
 
+        inputs.file("src/main/chisel/io/github/e1turin/circulator/demo/counter/counter.scala")
         outputs.dir(chiselOutputDir)
         this.mainClass = mainClass
         this.jvmArgs = jvmArgs
@@ -119,9 +117,9 @@ enum class FirtoolOutputAction(val flags: Array<String>, val fileExtension: Stri
     Verilog(arrayOf("--verilog", "-disable-all-randomization", "-strip-debug-info"), "v"),
 }
 
-val firtoolInputFile = chiselOutputDir.file("counter/Counter.fir")
+val firtoolInputFile = chiselOutputDir.file("counter/CounterChisel.fir")
 val firtoolAction = FirtoolOutputAction.IrHw
-val firtoolOutputFile = firtoolOutputDir.file("Counter.${firtoolAction.fileExtension}")
+val firtoolOutputFile = firtoolOutputDir.file("CounterChisel.${firtoolAction.fileExtension}")
 
 val compileFirrtl = tasks.register<Exec>("compileFirrtl") {
     dependsOn(compileChisel)
@@ -204,16 +202,6 @@ val compileCirctMlir = tasks.register<Exec>("compileCirctMlir") {
     )
 }
 
-fun platformDynLib(name: String): String {
-    val os = OperatingSystem.current()
-    return when (os) {
-        OperatingSystem.MAC_OS -> "lib$name.dylib"
-        OperatingSystem.LINUX -> "lib$name.so"
-        OperatingSystem.WINDOWS -> "$name.dll"
-        else -> error("Unsupported OS: ${os.name}")
-    }
-}
-
 sealed interface ClangPlatformBuild {
     val libName: String
     val flags: Array<String>
@@ -228,8 +216,7 @@ sealed interface ClangPlatformBuild {
     class Macos(name: String, source: File) : ClangPlatformBuild {
         override val libName: String = "lib$name.dylib"
         override val flags: Array<String> = buildList {
-//                add("-isysroot")
-//                add("$(xcrun --sdk macosx --show-sdk-path)")
+//                add("-isysroot $(xcrun --sdk macosx --show-sdk-path)")
             add("-nostartfiles")
             add("-nodefaultlibs")
             add("-dynamiclib")
@@ -254,7 +241,7 @@ sealed interface ClangPlatformBuild {
     }
 }
 
-val clangAction = ClangPlatformBuild.from("counter", arcilatorOutputFile.asFile)
+val clangAction = ClangPlatformBuild.from("counterchisel", arcilatorOutputFile.asFile)
 val clangOutputFile = clangOutputDir.file("counter/${clangAction.libName}")
 
 val compileLlvm = tasks.register<Exec>("compileLlvm") {
@@ -270,17 +257,8 @@ val compileLlvm = tasks.register<Exec>("compileLlvm") {
     commandLine("clang", *clangAction.flags, "-o", clangOutputFile)
 }
 
-circulator {
-    // setup json config to depend on full path of generated files
-    config = file("src/main/resources/circulator.json5")
-}
-
-val genKotlin = tasks.named("generateKotlinClasses") {
-    dependsOn(compileLlvm)
-}
-
 val runFullPipeline = tasks.register("runFullPipeline") {
     group = "circulator"
     description = "Run the full hardware compilation pipeline"
-    dependsOn(genKotlin)
+    dependsOn(compileLlvm)
 }

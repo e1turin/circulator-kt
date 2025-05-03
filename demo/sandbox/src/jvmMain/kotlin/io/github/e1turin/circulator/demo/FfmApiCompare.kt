@@ -1,14 +1,10 @@
 package io.github.e1turin.circulator.demo
 
+import io.github.e1turin.circulator.demo.chisel.generated.CounterChiselModel
 import io.github.e1turin.circulator.demo.generated.CounterModel
-import io.github.krakowski.jextract.jextracted.dut_h
 import io.github.krakowski.jextract.jextracted.State
-import java.lang.foreign.Arena
-import java.lang.foreign.FunctionDescriptor
-import java.lang.foreign.Linker
-import java.lang.foreign.MemoryLayout
-import java.lang.foreign.SymbolLookup
-import java.lang.foreign.ValueLayout
+import io.github.krakowski.jextract.jextracted.dut_h
+import java.lang.foreign.*
 
 
 fun main() {
@@ -37,6 +33,34 @@ fun playWithFFM() {
 
     println("Hello Jextract FFM World!")
     println("counter.o=${jextractFfm()}")
+
+    println("Hello Chisel World!")
+    println("counter.count=${chiselFfm()}\n")
+}
+
+fun chiselFfm(): Int {
+    fun CounterChiselModel.tick() {
+        clock = 1
+        eval()
+        clock = 0
+        eval()
+    }
+
+    fun CounterChiselModel.init() {
+        reset = 1
+        for (i in 1..7) tick()
+        reset = 0
+    }
+
+    Arena.ofConfined().use { arena ->
+        val counter = CounterChiselModel.instance(arena, "counterchisel")
+
+        counter.init()
+
+        for (i in 1..10) counter.tick()
+
+        return counter.count.toInt()
+    }
 }
 
 fun circulatorFfmWrapper(): Int {
@@ -66,9 +90,13 @@ fun circulatorFfmWrapper(): Int {
     }
 }
 
+fun <T> Arena.build(factory: Factory<T>): T {
+    return factory.build(this)
+}
+
 fun myFfmWrapper(): Int {
     Arena.ofConfined().use { arena ->
-        val dut = Dut.instance(arena, libName)
+        val dut = arena.build(Dut)
 
         fun Dut.step(times: Int = 1) {
             for (i in 1..times) {
