@@ -45,6 +45,7 @@ val chiselOutputDir = generatedDir.get().dir("chisel")
 val firtoolOutputDir = generatedDir.get().dir("firtool")
 val arcilatorOutputDir = generatedDir.get().dir("arcilator")
 val clangOutputDir = generatedDir.get().dir("clang")
+val verilogOutputDir = generatedDir.get().dir("verilog")
 
 fun chisel(name: String, mainClass: String, jvmArgs: List<String> = emptyList()): TaskProvider<JavaExec> {
     val formattedName = name.split("\\s+".toRegex()).joinToString("") {
@@ -64,11 +65,41 @@ fun chisel(name: String, mainClass: String, jvmArgs: List<String> = emptyList())
     return task
 }
 
-val produceFirrtlTask = chisel(
+val compileChisel = chisel(
     "Counter",
     mainClass = "io.github.e1turin.circulator.demo.counter.Main",
     jvmArgs = listOf("-Dchisel.output.dir=${chiselOutputDir}/counter")
 )
+
+enum class CirctVerilogAction(val flag: String, val fileExtension: String) {
+    IrHw("--ir-hw", "hw.mlir"),
+    IrMoore("--ir-moore", "moore.mlir"),
+    IrLlhd("--ir-llhd", "llhd.mlir"),
+}
+
+val verilogInputFile = layout.projectDirectory.file("src/main/verilog/counter/counter.v")
+val verilogAction = CirctVerilogAction.IrHw
+val verilogOutputFile = verilogOutputDir.file("counter/counter.${verilogAction.fileExtension}")
+
+val compileVerilog = tasks.register<Exec>("compileVerilog") {
+    group = "circulator"
+    description = "Run circt-verilog on Verilog sources"
+
+    inputs.file(verilogInputFile)
+    outputs.file(verilogOutputFile)
+
+    verilogOutputFile.asFile.ensureParentDirsCreated()
+
+    commandLine(
+        "circt-verilog",
+        verilogInputFile,
+        "--format=sv",
+        verilogAction.flag,
+        "-o",
+        verilogOutputFile
+    )
+}
+
 
 enum class FirtoolOutputAction(val flags: Array<String>, val fileExtension: String) {
     ParseOnly(arrayOf("--parse-only"), "fir.mlir"),
@@ -79,12 +110,11 @@ enum class FirtoolOutputAction(val flags: Array<String>, val fileExtension: Stri
     Verilog(arrayOf("--verilog", "-disable-all-randomization", "-strip-debug-info"), "v"),
 }
 
-val firtoolAction = FirtoolOutputAction.IrHw
 val firtoolInputFile = chiselOutputDir.file("counter/Counter.fir")
+val firtoolAction = FirtoolOutputAction.IrHw
 val firtoolOutputFile = firtoolOutputDir.file("Counter.${firtoolAction.fileExtension}")
 
-val produceMlirTask = tasks.register<Exec>("produceCounterMlir") {
-    dependsOn(produceFirrtlTask)
+val compileFirrtl = tasks.register<Exec>("produceCounterMlir") {
 
     group = "circulator"
     description = "Run firtool on Chisel FIRRTL output"
@@ -104,6 +134,14 @@ val produceMlirTask = tasks.register<Exec>("produceCounterMlir") {
     )
 }
 
+enum class SourceLang {
+    Verilog,
+    Chisel,
+    SystemC
+}
+
+val sourceHdl = SourceLang.Verilog
+
 enum class ArcilatorOutputAction(val flag: String, val fileExtension: String) {
     EmitLlvm("--emit-llvm", "ll"),
     EmitMlir("--emit-mlir", "mlir"),
@@ -111,11 +149,11 @@ enum class ArcilatorOutputAction(val flag: String, val fileExtension: String) {
 }
 
 enum class ArcilatorObserveFlags(val flag: String) {
-    ObserveMemories("--observe-memories"),
-    ObserveNamedValues("--observe-named-values"),
+//    ObserveMemories("--observe-memories"),
+//    ObserveNamedValues("--observe-named-values"),
     ObservePorts("--observe-ports"),
-    ObserveRegisters("--observe-registers"),
-    ObserveWires("--observe-wires")
+//    ObserveRegisters("--observe-registers"),
+//    ObserveWires("--observe-wires")
 }
 
 val arcilatorAction = ArcilatorOutputAction.EmitLlvm
@@ -126,19 +164,28 @@ val arcilatorOutputStateFile = arcilatorOutputDir.file("counter/counter-states.j
 val arcilatorObserves = enumEntries<ArcilatorObserveFlags>().map { it.flag }.toTypedArray()
 
 val produceLlvmTask = tasks.register<Exec>("produceCounterLlvm") {
-    dependsOn(produceMlirTask)
+    when(sourceHdl) {
+        SourceLang.Verilog -> dependsOn(compileVerilog)
+        SourceLang.Chisel -> dependsOn(compileFirrtl)
+        SourceLang.SystemC -> TODO()
+    }
 
     group = "circulator"
     description = "Run arcilator on MLIR output"
 
-    inputs.file(firtoolOutputFile)
+    val arcilatorInputFile = when(sourceHdl) {
+        SourceLang.Verilog -> verilogOutputFile
+        SourceLang.Chisel -> firtoolOutputFile
+        SourceLang.SystemC -> TODO()
+    }
+    inputs.file(arcilatorInputFile)
     outputs.file(arcilatorOutputFile)
 
     arcilatorOutputFile.asFile.ensureParentDirsCreated()
 
     commandLine(
         "arcilator",
-        firtoolOutputFile,
+        arcilatorInputFile,
         arcilatorAction.flag,
         *arcilatorObserves,
         "--state-file=${arcilatorOutputStateFile}",
