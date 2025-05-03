@@ -10,7 +10,7 @@ import chisel3._
 import _root_.circt.stage.ChiselStage
 
 
-class Dut extends Module {
+class Counter extends Module {
   val count = IO(Output(UInt(8.W)))
   
   val counter = RegInit(0.U(8.W))
@@ -21,7 +21,7 @@ class Dut extends Module {
 
 object Main extends App {
   ChiselStage.emitCHIRRTLFile(
-    new Dut,
-    Array("--target-dir", "build/generated/sources/chisel/counter"),
+    new Counter,
+    Array("--target-dir", System.getProperty("chisel.output.dir")),
   )
 }
