@@ -51,6 +51,10 @@ circulator {
     config = file("src/jvmMain/resources/circulator/config.json5")
 }
 
+tasks.named("generateKotlinClasses") {
+    dependsOn(":sandbox:chisel:runFullPipeline")
+}
+
 // setup jextract plugin task
 tasks.jextract {
     header("${project.projectDir}/src/jvmMain/resources/jextract/counter.h") {
