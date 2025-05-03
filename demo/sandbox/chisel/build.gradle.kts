@@ -4,14 +4,7 @@ import kotlin.enums.enumEntries
 
 plugins {
     scala
-    /* scala plugin interferes with kotlin plugin,
-     * cyclic dependency appears:
-     * 1. application requires kotlin classes produced by circulator's
-     *    pipeline starting from scala execution,
-     * 2. and scala requires java classes be ready but kotlin model is not (1).
-     */
-    // kotlin("jvm")
-    // application
+    /* see "Chisel-Circulator problem" paragraph in docs/notes/architecture.md */
 }
 
 repositories {
