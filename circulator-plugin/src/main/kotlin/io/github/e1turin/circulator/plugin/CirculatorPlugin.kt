@@ -54,8 +54,10 @@ public class CirculatorPlugin : Plugin<Project> {
         ext: CirculatorExtension
     ): TaskProvider<CirculatorGenerateWrappersTask> {
         val generateTask = project.tasks.register(
-            "circulatorGenWrappers", CirculatorGenerateWrappersTask::class.java
+            "generateKotlinClasses", CirculatorGenerateWrappersTask::class.java
         ) { task ->
+            task.group = "circulator"
+
             task.configFile.set(ext.config)
 
             val config = deserializeConfig(ext.config.asFile.get())
