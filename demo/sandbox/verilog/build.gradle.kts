@@ -3,105 +3,49 @@ import org.jetbrains.kotlin.gradle.internal.ensureParentDirsCreated
 import kotlin.enums.enumEntries
 
 plugins {
-    scala
-    /* see "Chisel-Circulator problem" paragraph in docs/notes/architecture.md */
+    // project for running verilog compilation pipeline
 }
 
 repositories {
     mavenCentral()
 }
 
-// Scala and Chisel configuration
 dependencies {
-    implementation("org.scala-lang:scala-library:2.13.15")
-    implementation("org.chipsalliance:chisel_2.13:6.7.0")
-    scalaCompilerPlugins("org.chipsalliance:chisel-plugin_2.13.15:6.7.0")
-}
-
-scala {
-    scalaVersion = "2.13.15"
-    zincVersion = "1.10.4"
-    sourceSets {
-        val main by getting {
-            scala.srcDirs("src/main/chisel")
-        }
-    }
-}
-
-tasks.withType<ScalaCompile>().configureEach {
-    scalaCompileOptions.additionalParameters = listOf(
-        "-language:reflectiveCalls",
-        "-deprecation",
-        "-feature",
-        "-Xcheckinit",
-        "-Ymacro-annotations"
-    )
 }
 
 val generatedDir = layout.buildDirectory.dir("generated/sources/circulator")
 
-val chiselOutputDir = generatedDir.get().dir("chisel")
-val firtoolOutputDir = generatedDir.get().dir("firtool")
 val arcilatorOutputDir = generatedDir.get().dir("arcilator")
 val clangOutputDir = generatedDir.get().dir("clang")
+val verilogOutputDir = generatedDir.get().dir("circt-verilog")
 
-fun chisel(name: String, mainClass: String, jvmArgs: List<String> = emptyList()): TaskProvider<JavaExec> {
-    val formattedName = name.split("\\s+".toRegex()).joinToString("") {
-        it.lowercase().replaceFirstChar { c -> c.uppercase() }
-    }
-
-    val task = tasks.register<JavaExec>("compile${formattedName}Chisel") {
-        group = "circulator"
-        description = "Run Chisel FIRRTL producing for model $name"
-        classpath = sourceSets["main"].runtimeClasspath
-
-        inputs.file("src/main/chisel/io/github/e1turin/circulator/demo/counter/counter.scala")
-        outputs.dir(chiselOutputDir)
-        this.mainClass = mainClass
-        this.jvmArgs = jvmArgs
-    }
-
-    return task
+enum class CirctVerilogAction(val flag: String, val fileExtension: String) {
+    IrHw("--ir-hw", "hw.mlir"),
+    IrMoore("--ir-moore", "moore.mlir"),
+    IrLlhd("--ir-llhd", "llhd.mlir"),
 }
 
-val compileChisel = chisel(
-    "Counter",
-    mainClass = "io.github.e1turin.circulator.demo.counter.Main",
-    jvmArgs = listOf("-Dchisel.output.dir=${chiselOutputDir}/counter")
-)
+val verilogInputFile = layout.projectDirectory.file("src/main/verilog/counter/counter.v")
+val verilogAction = CirctVerilogAction.IrHw
+val verilogOutputFile = verilogOutputDir.file("counter/counter.${verilogAction.fileExtension}")
 
-
-enum class FirtoolOutputAction(val flags: Array<String>, val fileExtension: String) {
-    ParseOnly(arrayOf("--parse-only"), "fir.mlir"),
-    IrFir(arrayOf("--ir-fir"), "fir.mlir"),
-    IrHw(arrayOf("--ir-hw"), "hw.mlir"),
-    IrSv(arrayOf("--ir-sv"), "sv.mlir"),
-    IrVerilog(arrayOf("--ir-verilog"), "v.mlir"),
-    Verilog(arrayOf("--verilog", "-disable-all-randomization", "-strip-debug-info"), "v"),
-}
-
-val firtoolInputFile = chiselOutputDir.file("counter/CounterChisel.fir")
-val firtoolAction = FirtoolOutputAction.IrHw
-val firtoolOutputFile = firtoolOutputDir.file("CounterChisel.${firtoolAction.fileExtension}")
-
-val compileFirrtl = tasks.register<Exec>("compileFirrtl") {
-    dependsOn(compileChisel)
-
+// this task is broken, as circt-verilog produces wrong output - it forgets comb.add instruction
+val compileVerilog = tasks.register<Exec>("compileVerilog(broken)") {
     group = "circulator"
-    description = "Run firtool on Chisel FIRRTL output"
+    description = "Run circt-verilog on Verilog sources"
 
-    inputs.file(firtoolInputFile)
-    outputs.file(firtoolOutputFile)
+    inputs.file(verilogInputFile)
+    outputs.file(verilogOutputFile)
 
-    firtoolOutputFile.asFile.ensureParentDirsCreated()
+    verilogOutputFile.asFile.ensureParentDirsCreated()
 
     commandLine(
-        "firtool",
-        firtoolInputFile,
-        "--format=fir",
-        *firtoolAction.flags,
+        "circt-verilog",
+        verilogInputFile,
+        "--format=sv",
+        verilogAction.flag,
         "-o",
-        firtoolOutputFile
+        verilogOutputFile
     )
 }
 
@@ -127,12 +71,12 @@ val arcilatorOutputStateFile = arcilatorOutputDir.file("counter/counter-states.j
 val arcilatorObserves = enumEntries<ArcilatorObserveFlags>().map { it.flag }.toTypedArray()
 
 val compileCirctMlir = tasks.register<Exec>("compileCirctMlir") {
-    dependsOn(compileFirrtl)
+    dependsOn(compileVerilog)
 
     group = "circulator"
     description = "Run arcilator on MLIR output"
 
-    val arcilatorInputFile = firtoolOutputFile
+    val arcilatorInputFile = verilogOutputFile
     inputs.file(arcilatorInputFile)
     outputs.file(arcilatorOutputFile)
 
@@ -188,7 +132,7 @@ sealed interface ClangPlatformBuild {
     }
 }
 
-val clangAction = ClangPlatformBuild.from("counterchisel", arcilatorOutputFile.asFile)
+val clangAction = ClangPlatformBuild.from("counterverilog", arcilatorOutputFile.asFile)
 val clangOutputFile = clangOutputDir.file("counter/${clangAction.libName}")
 
 val compileLlvm = tasks.register<Exec>("compileLlvm") {
@@ -204,7 +148,7 @@ val compileLlvm = tasks.register<Exec>("compileLlvm") {
     commandLine("clang", *clangAction.flags, "-o", clangOutputFile)
 }
 
-val runFullPipeline = tasks.register("runChiselPipeline") {
+val runFullPipeline = tasks.register("runVerilogPipeline") {
     group = "circulator"
     description = "Run the full hardware compilation pipeline"
     dependsOn(compileLlvm)

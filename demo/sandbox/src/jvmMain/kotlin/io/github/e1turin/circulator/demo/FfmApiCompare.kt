@@ -1,9 +1,10 @@
 package io.github.e1turin.circulator.demo
 
 import io.github.e1turin.circulator.demo.chisel.generated.CounterChiselModel
-import io.github.e1turin.circulator.demo.generated.CounterModel
+import io.github.e1turin.circulator.demo.sandbox.generated.CounterModel
+//import io.github.e1turin.circulator.demo.verilog.generated.CounterVerilogModel
 import io.github.krakowski.jextract.jextracted.State
-import io.github.krakowski.jextract.jextracted.dut_h
+import io.github.krakowski.jextract.jextracted.counter_h
 import java.lang.foreign.*
 
 
@@ -11,8 +12,9 @@ fun main() {
     playWithFFM()
 }
 
-val libName = "counter"
-val properLibName = System.mapLibraryName(libName) // 'counter.dll' on Windows or 'libcounter.so' on linux
+const val libName = "counter"
+// 'counter.dll' on Windows, 'libcounter.so' on linux, 'libcounter.dylib' on macOS
+val properLibName = System.mapLibraryName(libName)
 
 fun playWithFFM() {
     println("Hello JVM World!\n")
@@ -22,79 +24,91 @@ fun playWithFFM() {
 
     System.loadLibrary(libName) // required for Windows
 
+    val n = 10
+
     println("Hello Raw FFM World!")
-    println("counter.o=${rawFfm()}\n")
-
-    println("Hello My FFM World!")
-    println("counter.o=${myFfmWrapper()}\n")
-
-    println("Hello Circulator FFM World!")
-    println("counter.o=${circulatorFfmWrapper()}\n")
-
+    println("counter.o=${runRawFfmApiForCounter(n)} for $n ticks")
+    println()
     println("Hello Jextract FFM World!")
-    println("counter.o=${jextractFfm()}")
-
-    println("Hello Chisel World!")
-    println("counter.count=${chiselFfm()}\n")
+    println("counter.o=${runJextractFfmApiForCounter()} for $n ticks")
+    println()
+    println("Hello Circulator World!")
+    println("counter.o=${runCustomCounterModel()} for $n ticks")
+    println()
+    println("Hello Circulator (precompiled) World!")
+    println("counter.o=${runPrecompiledCounterModel()} for $n ticks")
+    println()
+    println("Hello Circulator (Chisel) World!")
+    println("counter.count=${runCounterChisel()} for $n ticks")
+//    println()
+//    println("Hello Circulator (Verilog) World!")
+//    println("counter.count=${runCounterVerilog()} for $n ticks")
 }
 
-fun chiselFfm(): Int {
-    fun CounterChiselModel.tick() {
-        clock = 1
-        eval()
-        clock = 0
-        eval()
-    }
+fun runRawFfmApiForCounter(n: Int = 10): Int {
+    val lookup = SymbolLookup.libraryLookup(properLibName, Arena.ofAuto())
+        .or(SymbolLookup.loaderLookup())
+        .or(Linker.nativeLinker().defaultLookup())
 
-    fun CounterChiselModel.init() {
-        reset = 1
-        for (i in 1..7) tick()
-        reset = 0
-    }
+    val linker = Linker.nativeLinker()
 
-    Arena.ofConfined().use { arena ->
-        val counter = CounterChiselModel.instance(arena, "counterchisel")
+    val dutEval = linker.downcallHandle(
+        lookup.find("Counter_eval").get(),
+        FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
+    )
 
-        counter.init()
+    val stateLayout = MemoryLayout.sequenceLayout(8, ValueLayout.JAVA_BYTE)
+    Arena.ofConfined().use {
+        val state = it.allocate(8)
 
-        for (i in 1..10) counter.tick()
+        state[ValueLayout.JAVA_BYTE, 1] = 1 // reset <= 1
+        for (i in 1..7) {
+            state[ValueLayout.JAVA_BYTE, 0] = 1 // clk <= 1
+            dutEval.invokeExact(state)
+            state[ValueLayout.JAVA_BYTE, 0] = 0 // clk <= 0
+            dutEval.invokeExact(state)
+        }
+        state[ValueLayout.JAVA_BYTE, 1] = 0 // reset <= 0
 
-        return counter.count.toInt()
-    }
-}
-
-fun circulatorFfmWrapper(): Int {
-    Arena.ofConfined().use { arena ->
-        val dut = CounterModel.instance(arena, libName)
-
-        fun CounterModel.step(times: Int = 1) {
-            for (i in 1..times) {
-                clk = 1
-                eval()
-                clk = 0
-                eval()
-            }
+        for (i in 1..n) {
+            state[ValueLayout.JAVA_BYTE, 0] = 1 // clk <= 1
+            dutEval.invokeExact(state)
+            state[ValueLayout.JAVA_BYTE, 0] = 0 // clk <= 0
+            dutEval.invokeExact(state)
         }
 
-        fun CounterModel.reset(steps: Int = 0) {
-            reset = 1
-            eval()
-            step(steps)
-            reset = 0
-        }
-
-        dut.reset(10)
-        dut.step(10)
-
-        return dut.o.toInt()
+        return state[ValueLayout.JAVA_BYTE, 7].toInt()
     }
 }
 
-fun <T> Arena.build(factory: Factory<T>): T {
-    return factory.build(this)
+fun runJextractFfmApiForCounter(n: Int = 10): Int {
+    Arena.ofConfined().use {
+        val state = it.allocate(State.layout())
+
+        State.reset(state, 1)
+        for (i in 1..10) {
+            State.clk(state, 1)
+            counter_h.Counter_eval(state)
+            State.clk(state, 0)
+            counter_h.Counter_eval(state)
+        }
+        State.reset(state, 0)
+
+        for (i in 1..n) {
+            State.clk(state, 1)
+            counter_h.Counter_eval(state)
+            State.clk(state, 0)
+            counter_h.Counter_eval(state)
+        }
+        return state[ValueLayout.JAVA_BYTE, 7].toInt()
+    }
 }
 
-fun myFfmWrapper(): Int {
+fun runCustomCounterModel(n: Int = 10): Int {
+    fun <T> Arena.build(factory: Factory<T>): T {
+        return factory.build(this)
+    }
+
     Arena.ofConfined().use { arena ->
         val dut = arena.build(Dut)
 
@@ -115,72 +129,86 @@ fun myFfmWrapper(): Int {
         }
 
         dut.reset(10)
-        dut.step(10)
+        dut.step(n)
 
         return dut.o.toInt()
     }
 }
 
-fun rawFfm(): Int {
-    val lookup = SymbolLookup.libraryLookup(properLibName, Arena.ofAuto())
-        .or(SymbolLookup.loaderLookup())
-        .or(Linker.nativeLinker().defaultLookup())
+fun runPrecompiledCounterModel(n: Int = 10): Int {
+    Arena.ofConfined().use { arena ->
+        val dut = CounterModel.instance(arena, "counter")
 
-    val linker = Linker.nativeLinker()
-
-    val dutEval = linker.downcallHandle(
-        lookup.find("Counter_eval").get(),
-        FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
-    )
-
-    val stateLayout = MemoryLayout.sequenceLayout(8, ValueLayout.JAVA_BYTE)
-    Arena.ofConfined().use {
-        val state = it.allocate(8)
-
-        // reset <= 1
-        state[ValueLayout.JAVA_BYTE, 1] = 1
-        for (i in 1..10) {
-            // clk <= 1
-            state[ValueLayout.JAVA_BYTE, 0] = 1
-            dutEval.invokeExact(state)
-            // clk <= 0
-            state[ValueLayout.JAVA_BYTE, 0] = 0
-            dutEval.invokeExact(state)
+        fun CounterModel.step(times: Int = 1) {
+            for (i in 1..times) {
+                clk = 1
+                eval()
+                clk = 0
+                eval()
+            }
         }
 
-        // reset <= 0
-        state[ValueLayout.JAVA_BYTE, 1] = 0
-        for (i in 1..10) {
-            // clk <= 1
-            state[ValueLayout.JAVA_BYTE, 0] = 1
-            dutEval.invokeExact(state)
-            // clk <= 0
-            state[ValueLayout.JAVA_BYTE, 0] = 0
-            dutEval.invokeExact(state)
+        fun CounterModel.reset(steps: Int = 0) {
+            reset = 1
+            eval()
+            step(steps)
+            reset = 0
         }
-        return state[ValueLayout.JAVA_BYTE, 7].toInt()
+
+        dut.reset(7)
+        dut.step(n)
+
+        return dut.o.toInt()
     }
 }
 
-fun jextractFfm(): Int {
-    Arena.ofConfined().use {
-        val state = it.allocate(State.layout())
 
-        State.reset(state, 1)
-        for (i in 1..10) {
-            State.clk(state, 1)
-            dut_h.Counter_eval(state)
-            State.clk(state, 0)
-            dut_h.Counter_eval(state)
-        }
+fun runCounterChisel(n: Int = 10): Int {
+    fun CounterChiselModel.tick() {
+        clock = 1
+        eval()
+        clock = 0
+        eval()
+    }
 
-        State.reset(state, 0)
-        for (i in 1..10) {
-            State.clk(state, 1)
-            dut_h.Counter_eval(state)
-            State.clk(state, 0)
-            dut_h.Counter_eval(state)
-        }
-        return state[ValueLayout.JAVA_BYTE, 7].toInt()
+    fun CounterChiselModel.init() {
+        reset = 1
+        for (i in 1..7) tick()
+        reset = 0
+    }
+
+    Arena.ofConfined().use { arena ->
+        val counter = CounterChiselModel.instance(arena, "counterchisel")
+
+        counter.init()
+
+        for (i in 1..n) counter.tick()
+
+        return counter.count.toInt()
     }
 }
+
+//fun runCounterVerilog(n: Int = 10): Int {
+//    fun CounterVerilogModel.tick() {
+//        clk = 1
+//        eval()
+//        clk = 0
+//        eval()
+//    }
+//
+//    fun CounterVerilogModel.init() {
+//        reset = 1
+//        for (i in 1..7) tick()
+//        reset = 0
+//    }
+//
+//    Arena.ofConfined().use { arena ->
+//        val counter = CounterVerilogModel.instance(arena, "counterverilog")
+//
+//        counter.init()
+//
+//        for (i in 1..n) counter.tick()
+//
+//        return counter.count.toInt()
+//    }
+//}

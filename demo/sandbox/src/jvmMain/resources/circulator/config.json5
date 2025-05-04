@@ -6,9 +6,8 @@
         or multiline comments
         like this
        */
-      "package": "io.github.e1turin.circulator.demo.generated",
+      "package": "io.github.e1turin.circulator.demo.sandbox.generated",
       "state-file": "src/jvmMain/resources/arcilator/counter-states.json",
-      "output": "build/generated/sources/circulator/jvmMain/kotlin",
       "model": {
         "open": true,
         "all-states-open": true,
@@ -35,7 +34,6 @@
     "counter-chisel": {
       "package": "io.github.e1turin.circulator.demo.chisel.generated",
       "state-file": "chisel/build/generated/sources/circulator/arcilator/counter/counter-states.json",
-      "output": "build/generated/sources/circulator/jvmMain/kotlin",
       "model": {
         "open": true,
         "all-states-open": true,
@@ -58,7 +56,33 @@
       "library": {
         "open": true
       }
-    }
+    },
+//    "counter-verilog": {
+//      "package": "io.github.e1turin.circulator.demo.verilog.generated",
+//      "state-file": "verilog/build/generated/sources/circulator/arcilator/counter/counter-states.json",
+//      "model": {
+//        "open": true,
+//        "all-states-open": true,
+//        "all-states-mutable": true,
+//        "all-states-type": [
+//          "input",
+//          "output",
+//          "register",
+//          "memory",
+//          "wire"
+//        ],
+//        "states": {
+//          "clkInternal": {
+//            "open": true,
+//            "mutable": true,
+//            "access": true
+//          }
+//        }
+//      },
+//      "library": {
+//        "open": true
+//      }
+//    }
   },
   "variables": {}
 }

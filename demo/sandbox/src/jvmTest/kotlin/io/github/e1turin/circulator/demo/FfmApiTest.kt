@@ -5,18 +5,23 @@ import kotlin.test.assertTrue
 
 class FfmApiTest {
     @Test
-    fun `FFM API comparison`() {
-        val circulator = circulatorFfmWrapper()
-        val my = myFfmWrapper()
-        val jextract = jextractFfm()
-        val raw = rawFfm()
-        val chisel = chiselFfm()
+    fun `basic counter behaviour`() {
 
-        assertTrue(
-            circulator == my
-                && my == jextract
-                && jextract == raw
-                && raw == chisel
-        )
+        val n = 10
+
+        val circulator = runPrecompiledCounterModel(n)
+        val my = runCustomCounterModel(n)
+        val jextract = runJextractFfmApiForCounter(n)
+        val raw = runRawFfmApiForCounter(n)
+        val chisel = runCounterChisel(n)
+//        val verilog = runCounterVerilog(n)
+
+        assertTrue { circulator == n }
+        assertTrue { my == n }
+        assertTrue { jextract == n }
+        assertTrue { raw == n }
+        assertTrue { chisel == n }
+
+//        assertFalse { verilog == n } // broken `circt-verilog` compiler
     }
 }

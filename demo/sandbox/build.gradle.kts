@@ -41,7 +41,6 @@ kotlin {
         }
         val jvmMain by getting {
             dependencies {
-                implementation("io.github.e1turin.circulator:circulator-plugin:0.1.0")
             }
         }
     }
@@ -52,7 +51,9 @@ circulator {
 }
 
 tasks.named("generateKotlinClasses") {
-    dependsOn(":sandbox:chisel:runFullPipeline")
+    dependsOn(":sandbox:chisel:runChiselPipeline")
+    // requires chisel-verilog utility from custom CIRCT build with slang frontend
+    // dependsOn(":sandbox:verilog:runVerilogPipeline")
 }
 
 // setup jextract plugin task
@@ -83,15 +84,16 @@ fun JavaForkOptions.setupLibraryPath() {
     jvmArgs("--enable-native-access=ALL-UNNAMED")
 
     val dynLibPathChisel = "${projectDir}/chisel/build/generated/sources/circulator/clang/counter"
+    val dynLibPathVerilog = "${projectDir}/verilog/build/generated/sources/circulator/clang/counter"
 
     val dynLibPath = "${projectDir}/src/jvmMain/resources/circulator/libs/counter"
     when (val host = HostManager.host) {
         // by some reason setting the java.library.path variable does not lead to the goal
-        KonanTarget.LINUX_X64 -> environment("LD_LIBRARY_PATH", "$dynLibPath/x64")
+        KonanTarget.LINUX_X64 -> environment("LD_LIBRARY_PATH", "$dynLibPath/x64:$dynLibPathChisel")
 
-        KonanTarget.MINGW_X64 -> jvmArgs("-Djava.library.path=${dynLibPath}/64")
+        KonanTarget.MINGW_X64 -> jvmArgs("-Djava.library.path=${dynLibPath}/64:$dynLibPathChisel")
 
-        KonanTarget.MACOS_X64 -> environment("DYLD_LIBRARY_PATH", "$dynLibPath/x64")
+        KonanTarget.MACOS_X64 -> environment("DYLD_LIBRARY_PATH", "$dynLibPath/x64:$dynLibPathChisel")
         KonanTarget.MACOS_ARM64 -> environment("DYLD_LIBRARY_PATH", "$dynLibPath/arm64:$dynLibPathChisel")
 
         else -> error("Unknown host: $host")

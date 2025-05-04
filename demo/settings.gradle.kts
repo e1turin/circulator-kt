@@ -24,6 +24,9 @@ dependencyResolutionManagement {
     }
 }
 
-include("sandbox",
-        "sandbox:chisel")
+include(
+    ":sandbox",
+    ":sandbox:chisel",
+    ":sandbox:verilog"
+)
 includeBuild("..")

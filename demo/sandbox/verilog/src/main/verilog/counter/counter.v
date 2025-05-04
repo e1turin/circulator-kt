@@ -1,5 +1,4 @@
-// Verilog model
-module Counter (
+module CounterVerilog (
    input clk,
    input reset,
    output reg [7:0] count
