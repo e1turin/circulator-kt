@@ -4,6 +4,13 @@ pluginManagement {
     repositories {
         gradlePluginPortal()
         mavenCentral()
+        google {
+            mavenContent {
+                includeGroupAndSubgroups("androidx")
+                includeGroupAndSubgroups("com.android")
+                includeGroupAndSubgroups("com.google")
+            }
+        }
     }
 }
 
@@ -16,6 +23,13 @@ dependencyResolutionManagement {
     repositories {
         mavenLocal()
         mavenCentral()
+        google {
+            mavenContent {
+                includeGroupAndSubgroups("androidx")
+                includeGroupAndSubgroups("com.android")
+                includeGroupAndSubgroups("com.google")
+            }
+        }
     }
     versionCatalogs {
         create("libs") {
@@ -27,6 +41,7 @@ dependencyResolutionManagement {
 include(
     ":sandbox",
     ":sandbox:chisel",
-    ":sandbox:verilog"
+    ":sandbox:verilog",
+    ":sandbox:controls"
 )
 includeBuild("..")

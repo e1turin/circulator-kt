@@ -1,11 +1,10 @@
 {
   // JSON5 because it allows to use comments like this.
   "models": {
+    /* Models in format "<model id>": {<model settings>} .
+     * Model id is unused in the current version of Circulator
+     */
     "counter": {
-      /*
-        or multiline comments
-        like this
-       */
       "package": "io.github.e1turin.circulator.demo.sandbox.generated",
       "state-file": "src/jvmMain/resources/arcilator/counter-states.json",
       "model": {
@@ -37,21 +36,15 @@
       "model": {
         "open": true,
         "all-states-open": true,
-        "all-states-mutable": true,
+        "all-states-mutable": false,
         "all-states-type": [
           "input",
           "output",
-          "register",
-          "memory",
-          "wire"
+//          "register",
+//          "memory",
+//          "wire"
         ],
-        "states": {
-          "clkInternal": {
-            "open": true,
-            "mutable": true,
-            "access": true
-          }
-        }
+//        "states": {}
       },
       "library": {
         "open": true
