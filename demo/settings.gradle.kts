@@ -42,6 +42,7 @@ include(
     ":sandbox",
     ":sandbox:chisel",
     ":sandbox:verilog",
-    ":sandbox:controls"
+    ":sandbox:controls",
+    ":sandbox:compose"
 )
 includeBuild("..")

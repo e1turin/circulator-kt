@@ -1,6 +1,7 @@
 package io.github.e1turin.circulator.demo.controls
 
 import io.github.e1turin.circulator.demo.chisel.generated.CounterChiselModel
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import space.kscience.controls.api.Device
 import space.kscience.controls.spec.DeviceBySpec
@@ -71,3 +72,5 @@ fun CounterDevice.clickHandler() = launch {
 fun CounterDevice.resetHandler() = launch {
     execute(CounterDevice.reset)
 }
+
+fun CounterDevice.getCount() = async { read(CounterDevice.count) }
