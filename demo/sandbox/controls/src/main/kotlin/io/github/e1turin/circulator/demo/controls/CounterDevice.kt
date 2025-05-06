@@ -1,21 +1,12 @@
 package io.github.e1turin.circulator.demo.controls
 
 import io.github.e1turin.circulator.demo.chisel.generated.CounterChiselModel
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
 import space.kscience.controls.api.Device
-import space.kscience.controls.spec.DeviceBySpec
-import space.kscience.controls.spec.DeviceSpec
-import space.kscience.controls.spec.doRecurring
-import space.kscience.controls.spec.execute
-import space.kscience.controls.spec.numberProperty
-import space.kscience.controls.spec.read
-import space.kscience.controls.spec.unitAction
+import space.kscience.controls.spec.*
 import space.kscience.dataforge.context.Context
 import space.kscience.dataforge.context.Factory
 import space.kscience.dataforge.meta.Meta
 import java.lang.foreign.Arena
-import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
 
 interface ICounterDevice : Device {
@@ -31,7 +22,10 @@ class CounterDevice(context: Context, meta: Meta, arena: Arena) :
 
     override fun reset() {
         model.reset = 1
-        for (i in 1..Random.nextInt(10)) model.eval()
+        model.clock = 1
+        model.eval()
+        model.clock = 0
+        model.eval()
         model.reset = 0
     }
 
@@ -55,8 +49,8 @@ class CounterDevice(context: Context, meta: Meta, arena: Arena) :
             }
         }
 
-        override fun factory(arena: Arena) = Factory {
-                context, meta -> CounterDevice(context, meta, arena)
+        override fun factory(arena: Arena) = Factory { context, meta ->
+            CounterDevice(context, meta, arena)
         }
 
     }
@@ -64,19 +58,4 @@ class CounterDevice(context: Context, meta: Meta, arena: Arena) :
 
 interface FfmMetaFactory<T> {
     fun factory(arena: Arena): Factory<T>
-}
-
-fun CounterDevice.clickHandler() = launch {
-    execute(CounterDevice.click)
-    println("Update count: $countValue")
-}
-
-fun CounterDevice.resetHandler() = launch {
-    execute(CounterDevice.reset)
-    println("Reset count: $countValue")
-}
-
-fun CounterDevice.getCount() = async {
-    read(CounterDevice.count)
-        .also { println("Count: $it") }
 }

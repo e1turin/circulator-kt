@@ -1,11 +1,10 @@
 package io.github.e1turin.circulator.demo.controls
 
 import space.kscience.controls.manager.DeviceManager
-import space.kscience.controls.manager.install
+import space.kscience.controls.manager.installing
 import space.kscience.dataforge.context.Context
 import space.kscience.dataforge.context.ContextAware
 import space.kscience.dataforge.context.request
-import space.kscience.dataforge.meta.Meta
 import java.lang.foreign.Arena
 
 class CounterDeviceController(arena: Arena): ContextAware {
@@ -13,5 +12,5 @@ class CounterDeviceController(arena: Arena): ContextAware {
         plugin(DeviceManager)
     }
     val deviceManager = context.request(DeviceManager)
-    val counter = deviceManager.install("counter", CounterDevice.factory(arena), Meta {})
+    val counter by deviceManager.installing( CounterDevice.factory(arena))
 }
