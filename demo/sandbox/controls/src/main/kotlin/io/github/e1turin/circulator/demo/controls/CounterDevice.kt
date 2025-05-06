@@ -45,10 +45,6 @@ class CounterDevice(context: Context, meta: Meta, arena: Arena) :
     override val countValue: Int get() = model.count.toInt()
 
     companion object Spec : DeviceSpec<ICounterDevice>(), FfmMetaFactory<CounterDevice> {
-        override fun factory(arena: Arena) = Factory {
-            context, meta -> CounterDevice(context, meta, arena)
-        }
-
         val count by numberProperty { countValue }
         val reset by unitAction { reset() }
         val click by unitAction { click() }
@@ -58,6 +54,11 @@ class CounterDevice(context: Context, meta: Meta, arena: Arena) :
                 read(count)
             }
         }
+
+        override fun factory(arena: Arena) = Factory {
+                context, meta -> CounterDevice(context, meta, arena)
+        }
+
     }
 }
 
@@ -67,10 +68,15 @@ interface FfmMetaFactory<T> {
 
 fun CounterDevice.clickHandler() = launch {
     execute(CounterDevice.click)
+    println("Update count: $countValue")
 }
 
 fun CounterDevice.resetHandler() = launch {
     execute(CounterDevice.reset)
+    println("Reset count: $countValue")
 }
 
-fun CounterDevice.getCount() = async { read(CounterDevice.count) }
+fun CounterDevice.getCount() = async {
+    read(CounterDevice.count)
+        .also { println("Count: $it") }
+}
