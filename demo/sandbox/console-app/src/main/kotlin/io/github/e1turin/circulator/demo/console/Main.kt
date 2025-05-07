@@ -2,7 +2,11 @@ package io.github.e1turin.circulator.demo.console
 
 import io.github.e1turin.circulator.demo.controls.CounterDevice
 import io.github.e1turin.circulator.demo.controls.CounterDeviceController
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import space.kscience.controls.spec.execute
 import space.kscience.controls.spec.read
 import java.lang.foreign.Arena

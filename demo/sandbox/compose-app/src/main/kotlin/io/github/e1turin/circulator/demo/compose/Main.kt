@@ -1,24 +1,28 @@
 package io.github.e1turin.circulator.demo.compose
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import io.github.e1turin.circulator.demo.controls.CounterDeviceController
-import io.github.e1turin.circulator.demo.controls.clickHandler
-import io.github.e1turin.circulator.demo.controls.resetHandler
+import kotlinx.coroutines.delay
 import java.lang.foreign.Arena
 
 fun main() {
-    Arena.ofConfined().use { arena ->
+    /* Caught WrongThreadException as arena is accessed
+     * from not owning thread. Quick fix is to use Shared arena.
+     */
+    Arena.ofShared().use { arena ->
         val controller = CounterDeviceController(arena)
 
         application {
@@ -26,8 +30,6 @@ fun main() {
         }
     }
 }
-
-val buttonStyle = Modifier.fillMaxWidth()
 
 @Composable
 fun ControlPanel(controller: CounterDeviceController, onCloseRequest: () -> Unit) {
@@ -44,23 +46,54 @@ fun ControlPanel(controller: CounterDeviceController, onCloseRequest: () -> Unit
         }
     }
 }
+
+val elementStyle = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
+val buttonShape = CircleShape
+val resetButtonColor = Color(0XFFE03131)
+
 @Composable
 fun CounterDeviceController.Panel() {
-    Column {
-        /* ERROR: java.lang.WrongThreadException: Attempted access outside owning thread
-             as model calls VarHandle on Segment... */
-        Text(counter.countValue.toString())
-        Button(
-            onClick = { counter.clickHandler() },
-            modifier = buttonStyle
-        ) {
-            Text("Click")
+    var count by remember { mutableStateOf(counter.countValue) }
+    var auto by remember { mutableStateOf(false) }
+
+    LaunchedEffect(auto) {
+        while (auto) {
+            counter.click()
+            count = counter.countValue
+            delay(1000)
         }
-        Button(
-            onClick = { counter.resetHandler() },
-            modifier = buttonStyle
-        ) {
-            Text("Reset")
+    }
+
+    Column {
+        Box(elementStyle) {
+            Text(
+                count.toString(),
+                modifier = elementStyle,
+                style = MaterialTheme.typography.h4,
+                textAlign = TextAlign.Center,
+            )
+        }
+        Row(elementStyle, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(
+                onClick = { auto = !auto },
+                shape = buttonShape,
+            ) {
+                Text(if (auto) "1s" else "off")
+            }
+            Button(
+                onClick = { counter.click(); count = counter.countValue },
+                modifier = Modifier.weight(1f),
+                shape = buttonShape,
+            ) {
+                Text("click")
+            }
+            Button(
+                onClick = { counter.reset(); count = counter.countValue },
+                shape = buttonShape,
+                colors = ButtonDefaults.buttonColors(backgroundColor = resetButtonColor, contentColor = Color.White),
+            ) {
+                Text("reset")
+            }
         }
     }
 }
