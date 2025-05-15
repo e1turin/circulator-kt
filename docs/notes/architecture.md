@@ -40,3 +40,11 @@ in other HDL languages. Initially it refers to _state_ object in state file prod
   just the Arcilator simulator.
 
 **Library** is a binary object file used as a native implementation of models.
+
+## Native Libraries Management
+
+For JVM Jar archived apllications common approach to use native labriries is unpacking a library from resources to a temp directory in OS and after load it with `System.load(...)`
+call. So, for developing tool can help to manage these boring actions in Multiplatform way, as it does [Kotlin Mutloplatform][kmp-resource-usage]. Circulator could provide
+configuration for used native libraries and generate code for convenient usage of it.
+
+[kmp-resource-usage]: https://www.jetbrains.com/help/kotlin-multiplatform-dev/compose-multiplatform-resources-usage.html

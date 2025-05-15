@@ -51,7 +51,7 @@ And set up `java.library.path` variable when run the JVM.
 On macOS JVM needs dynamic library `libcounter.dylib` and compiler needs explicit options.
 
 ```sh
-clang -isysroot ${xcrun --sdk macosx --show-sdk-path} -nostartfiles -nodefaultlibs -dynamiclib counter.ll -lSystem -o libcounter.dylib
+clang -nostartfiles -nodefaultlibs -dynamiclib counter.ll -lSystem -o libcounter.dylib
 ```
 
 CIRCT project [offers only x86_64 binaries][circt-release], but alternatively you
