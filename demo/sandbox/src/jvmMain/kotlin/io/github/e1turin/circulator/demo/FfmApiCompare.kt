@@ -30,16 +30,16 @@ fun playWithFFM() {
     println("counter.o=${runRawFfmApiForCounter(n)} for $n ticks")
     println()
     println("Hello Jextract FFM World!")
-    println("counter.o=${runJextractFfmApiForCounter()} for $n ticks")
+    println("counter.o=${runJextractFfmApiForCounter(n)} for $n ticks")
     println()
     println("Hello Circulator World!")
-    println("counter.o=${runCustomCounterModel()} for $n ticks")
+    println("counter.o=${runCustomCounterModel(n)} for $n ticks")
     println()
     println("Hello Circulator (precompiled) World!")
-    println("counter.o=${runPrecompiledCounterModel()} for $n ticks")
+    println("counter.o=${runPrecompiledCounterModel(n)} for $n ticks")
     println()
     println("Hello Circulator (Chisel) World!")
-    println("counter.count=${runCounterChisel()} for $n ticks")
+    println("counter.count=${runCounterChisel(n)} for $n ticks")
 //    println()
 //    println("Hello Circulator (Verilog) World!")
 //    println("counter.count=${runCounterVerilog()} for $n ticks")
@@ -141,18 +141,18 @@ fun runPrecompiledCounterModel(n: Int = 10): Int {
 
         fun CounterModel.step(times: Int = 1) {
             for (i in 1..times) {
-                clk = 1
+                clk = 1.toUByte()
                 eval()
-                clk = 0
+                clk = 0.toUByte()
                 eval()
             }
         }
 
         fun CounterModel.reset(steps: Int = 0) {
-            reset = 1
+            reset = 1.toUByte()
             eval()
             step(steps)
-            reset = 0
+            reset = 0.toUByte()
         }
 
         dut.reset(7)
@@ -165,16 +165,16 @@ fun runPrecompiledCounterModel(n: Int = 10): Int {
 
 fun runCounterChisel(n: Int = 10): Int {
     fun CounterChiselModel.tick() {
-        clock = 1
+        clock = 1.toUByte()
         eval()
-        clock = 0
+        clock = 0.toUByte()
         eval()
     }
 
     fun CounterChiselModel.init() {
-        reset = 1
+        reset = 1.toUByte()
         for (i in 1..7) tick()
-        reset = 0
+        reset = 0.toUByte()
     }
 
     Arena.ofConfined().use { arena ->

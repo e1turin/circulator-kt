@@ -10,7 +10,7 @@
       "model": {
         "open": true,
         "all-states-open": true,
-        "all-states-mutable": true,
+        "all-states-mutable": false,
         "all-states-type": [
           "input",
           "output",

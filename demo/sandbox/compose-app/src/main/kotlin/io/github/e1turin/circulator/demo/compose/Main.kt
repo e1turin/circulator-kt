@@ -51,9 +51,20 @@ val elementStyle = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical 
 val buttonShape = CircleShape
 val resetButtonColor = Color(0XFFE03131)
 
+/* Model of real screen which receives data as array of chars */
+@Composable
+fun Screen(output: Int) {
+    Text(
+        output.toString(),
+        modifier = elementStyle,
+        style = MaterialTheme.typography.h4,
+        textAlign = TextAlign.Center,
+    )
+}
+
 @Composable
 fun CounterDeviceController.Panel() {
-    var count by remember { mutableStateOf(counter.countValue) }
+    var count by remember { mutableStateOf(255) }
     var auto by remember { mutableStateOf(false) }
 
     LaunchedEffect(auto) {
@@ -66,12 +77,8 @@ fun CounterDeviceController.Panel() {
 
     Column {
         Box(elementStyle) {
-            Text(
-                count.toString(),
-                modifier = elementStyle,
-                style = MaterialTheme.typography.h4,
-                textAlign = TextAlign.Center,
-            )
+            /* additional requirement of conversion to UByte found by e2e-testing */
+            Screen(count/*.toByte().toInt()*/)
         }
         Row(elementStyle, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(

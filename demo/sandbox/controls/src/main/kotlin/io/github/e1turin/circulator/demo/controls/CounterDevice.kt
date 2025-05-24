@@ -21,18 +21,18 @@ class CounterDevice(context: Context, meta: Meta, arena: Arena) :
     val model: CounterChiselModel = CounterChiselModel.instance(arena, "counterchisel")
 
     override fun reset() {
-        model.reset = 1
-        model.clock = 1
+        model.reset = 1.toUByte()
+        model.clock = 1.toUByte()
         model.eval()
-        model.clock = 0
+        model.clock = 0.toUByte()
         model.eval()
-        model.reset = 0
+        model.reset = 0.toUByte()
     }
 
     override fun click() {
-        model.clock = 1
+        model.clock = 1.toUByte()
         model.eval()
-        model.clock = 0
+        model.clock = 0.toUByte()
         model.eval()
     }
 
