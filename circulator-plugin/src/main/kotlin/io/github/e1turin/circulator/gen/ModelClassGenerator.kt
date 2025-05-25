@@ -184,7 +184,8 @@ internal class ModelClassGenerator(
             StateProjectionType.WIRE -> STATE_DELEGATE_WIRE
         }
 
-        val builder = PropertySpec.builder(stateProjectionName, getTypeForNumBits(state.numBits))
+        val propertyType = getTypeForNumBits(state.numBits)
+        val builder = PropertySpec.builder(stateProjectionName, propertyType)
 
         if (openModelClass && allStateProjectionsOpen) {
             builder.addModifiers(KModifier.OPEN)
@@ -195,7 +196,7 @@ internal class ModelClassGenerator(
                 CodeBlock.of(
                     "%M<%T>(%L)",
                     delegate,
-                    getTypeForNumBits(state.numBits),
+                    propertyType,
                     state.offset,
                 )
             )
@@ -247,10 +248,15 @@ internal class ModelClassGenerator(
 
 
     private fun getTypeForNumBits(numBits: UInt): TypeName = when {
-        numBits <= 8u -> BYTE
-        numBits <= 16u -> SHORT
-        numBits <= 32u -> INT
-        numBits <= 64u -> LONG
+// TODO: Add setting to configuration for type sign
+//numBits <= 8u -> BYTE
+//numBits <= 16u -> SHORT
+//numBits <= 32u -> INT
+//numBits <= 64u -> LONG
+        numBits <= 8u -> UBYTE
+        numBits <= 16u -> USHORT
+        numBits <= 32u -> UINT
+        numBits <= 64u -> ULONG
         else -> throw IllegalArgumentException("Unsupported numBits: $numBits")
     }
 
@@ -270,6 +276,11 @@ internal class ModelClassGenerator(
         val STATE_DELEGATE_REGISTER = MemberName("io.github.e1turin.circulator.state", "register")
         val STATE_DELEGATE_MEMORY = MemberName("io.github.e1turin.circulator.state", "memory")
         val STATE_DELEGATE_WIRE = MemberName("io.github.e1turin.circulator.state", "wire")
+
+        val UBYTE = ClassName("kotlin", "UByte")
+        val USHORT = ClassName("kotlin", "UShort")
+        val UINT = ClassName("kotlin", "UInt")
+        val ULONG = ClassName("kotlin", "ULong")
     }
 
 }

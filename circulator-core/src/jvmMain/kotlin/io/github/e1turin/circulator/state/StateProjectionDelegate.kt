@@ -36,6 +36,17 @@ internal class ByteStateProjection(private val offset: Long) : StateProjectionDe
 }
 
 @PublishedApi
+internal class UByteStateProjection(private val offset: Long) : StateProjectionDelegate<UByte> {
+    override fun getProjectionValueOf(stateful: Stateful): UByte {
+        return stateful.state.get(ValueLayout.JAVA_BYTE, offset).toUByte()
+    }
+
+    override fun setProjectionOf(stateful: Stateful, value: UByte) {
+        stateful.state.set(ValueLayout.JAVA_BYTE, offset, value.toByte())
+    }
+}
+
+@PublishedApi
 internal class IntStateProjection(private val offset: Long) : StateProjectionDelegate<Int> {
     override fun getProjectionValueOf(stateful: Stateful): Int {
         return stateful.state.get(ValueLayout.JAVA_INT, offset)
@@ -47,6 +58,17 @@ internal class IntStateProjection(private val offset: Long) : StateProjectionDel
 }
 
 @PublishedApi
+internal class UIntStateProjection(private val offset: Long) : StateProjectionDelegate<UInt> {
+    override fun getProjectionValueOf(stateful: Stateful): UInt {
+        return stateful.state.get(ValueLayout.JAVA_INT, offset).toUInt()
+    }
+
+    override fun setProjectionOf(stateful: Stateful, value: UInt) {
+        stateful.state.set(ValueLayout.JAVA_INT, offset, value.toInt())
+    }
+}
+
+@PublishedApi
 internal class LongStateProjection(private val offset: Long) : StateProjectionDelegate<Long> {
     override fun getProjectionValueOf(stateful: Stateful): Long {
         return stateful.state.get(ValueLayout.JAVA_LONG, offset)
@@ -54,6 +76,17 @@ internal class LongStateProjection(private val offset: Long) : StateProjectionDe
 
     override fun setProjectionOf(stateful: Stateful, value: Long) {
         stateful.state.set(ValueLayout.JAVA_LONG, offset, value)
+    }
+}
+
+@PublishedApi
+internal class ULongStateProjection(private val offset: Long) : StateProjectionDelegate<ULong> {
+    override fun getProjectionValueOf(stateful: Stateful): ULong {
+        return stateful.state.get(ValueLayout.JAVA_LONG, offset).toULong()
+    }
+
+    override fun setProjectionOf(stateful: Stateful, value: ULong) {
+        stateful.state.set(ValueLayout.JAVA_LONG, offset, value.toLong())
     }
 }
 
@@ -83,14 +116,29 @@ public inline fun <reified T> Model.stateProjection(
             ByteStateProjection(scaledOffset(offset, byteSize))
         }
 
+        UByte::class -> {
+            byteSize = ValueLayout.JAVA_BYTE.byteSize()
+            UByteStateProjection(scaledOffset(offset, byteSize))
+        }
+
         Int::class -> {
             byteSize = ValueLayout.JAVA_INT.byteSize()
             IntStateProjection(scaledOffset(offset, byteSize))
         }
 
+        UInt::class -> {
+            byteSize = ValueLayout.JAVA_INT.byteSize()
+            UIntStateProjection(scaledOffset(offset, byteSize))
+        }
+
         Long::class -> {
             byteSize = ValueLayout.JAVA_LONG.byteSize()
             LongStateProjection(scaledOffset(offset, byteSize))
+        }
+
+        ULong::class -> {
+            byteSize = ValueLayout.JAVA_LONG.byteSize()
+            ULongStateProjection(scaledOffset(offset, byteSize))
         }
 
         else -> throw NotImplementedError("Unsupported Type for memory access: ${T::class.qualifiedName}")
@@ -107,6 +155,6 @@ public inline fun <reified T> Model.stateProjection(
 public inline fun <reified T> Model.input(offset: Long) = stateProjection<T>(offset, StateProjectionType.INPUT)
 public inline fun <reified T> Model.output(offset: Long) = stateProjection<T>(offset, StateProjectionType.OUTPUT)
 public inline fun <reified T> Model.register(offset: Long) = stateProjection<T>(offset, StateProjectionType.REGISTER)
-public inline fun <reified T> Model.memory(offset: Long) = stateProjection<T>(offset, StateProjectionType.MEMORY)
+public inline fun <reified T> Model.memory(offset: Long, layout: MemoryLayoutBuilder.()->MemoryLayout) = stateProjection<T>(offset, StateProjectionType.MEMORY).also { MemoryLayoutBuilder.layout() }
 public inline fun <reified T> Model.wire(offset: Long) = stateProjection<T>(offset, StateProjectionType.WIRE)
 

@@ -56,6 +56,6 @@ public data class StateInfo(
     val name: String,
     val offset: UInt,
     val numBits: UInt,
-    val memoryStrides: UInt = 0u,
-    val memoryDepth: UInt = 0u,
+    val memoryStrides: UInt = 0u, // bytes per word
+    val memoryDepth: UInt = 0u, // number of words
 )
