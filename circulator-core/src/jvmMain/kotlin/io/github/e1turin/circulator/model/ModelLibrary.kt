@@ -1,4 +1,4 @@
-package io.github.e1turin.circulator.ffm.model
+package io.github.e1turin.circulator.model
 
 import java.lang.foreign.*
 import java.lang.invoke.MethodHandle
