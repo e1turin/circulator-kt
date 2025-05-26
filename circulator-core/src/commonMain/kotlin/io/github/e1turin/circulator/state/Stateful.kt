@@ -5,6 +5,6 @@ package io.github.e1turin.circulator.state
  *
  * @param M Type of underlying state.
  */
-public interface Stateful<M> {
+public interface Stateful<out M> {
     public val state: M
 }

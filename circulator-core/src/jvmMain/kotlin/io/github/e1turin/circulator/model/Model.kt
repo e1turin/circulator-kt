@@ -1,6 +1,6 @@
-package io.github.e1turin.circulator.ffm.model
+package io.github.e1turin.circulator.model
 
-import io.github.e1turin.circulator.ffm.state.FfmStateful
+import io.github.e1turin.circulator.state.FfmStateful
 import java.lang.foreign.MemorySegment
 
 public abstract class Model(
