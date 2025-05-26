@@ -1,4 +1,4 @@
-package io.github.e1turin.circulator.model
+package io.github.e1turin.circulator.ffm.model
 
 import java.lang.foreign.*
 import java.lang.invoke.MethodHandle
@@ -11,7 +11,7 @@ public abstract class ModelLibrary(
     public val finalFnSym: String,
 ) {
     init {
-        System.loadLibrary(name)
+//        System.loadLibrary(name)
     }
 
     public val libraryName: String = System.mapLibraryName(name)
