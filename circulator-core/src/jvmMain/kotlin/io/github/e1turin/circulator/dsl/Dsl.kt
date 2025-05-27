@@ -8,7 +8,6 @@ import io.github.e1turin.circulator.state.*
 import io.github.e1turin.circulator.types.Memory
 import kotlin.properties.ReadOnlyProperty
 import kotlin.properties.ReadWriteProperty
-import kotlin.reflect.KProperty
 
 
 public inline infix fun <reified T> FfmStateViewer<T>.at(offset: Long): StateProjectionReadOnlyDelegate<FfmStateful, T> {
@@ -48,10 +47,7 @@ public inline fun <T> debugRegister(signal: () -> PlacedSignalConfig<T>): ReadWr
 
 @PublishedApi
 internal fun <T> delegateFrom(config: PlacedMemoryConfig<T>): FfmStateProjectionReadOnlyDelegate<Memory<T>> =
-    object : FfmStateProjectionReadOnlyDelegate<Memory<T>> {
-        val mem = memoryFrom(config)
-        override fun getValue(thisRef: FfmStateful, property: KProperty<*>): Memory<T> = mem
-    }
+    FfmMemoryStateDelegate(config.accessor, config.offset, config.stride, config.depth)
 
 public inline fun <T> memory(
     accessor: MemoryBuilder.() -> PlacedMemoryConfig<T>

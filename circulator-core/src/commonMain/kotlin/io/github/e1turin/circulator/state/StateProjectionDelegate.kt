@@ -9,9 +9,7 @@ public interface StateProjectionReadOnlyDelegate<in S, out T> : ReadOnlyProperty
 
 public interface StateProjectionReadWriteDelegate<in S, T> : StateProjectionReadOnlyDelegate<S, T>, ReadWriteProperty<S, T>
 
-public interface StateProjectionReadOnlyDelegateProvider<in S, T> : StateProjectionReadOnlyDelegate<S, T>,
-    PropertyDelegateProvider<S, StateProjectionReadWriteDelegate<S, T>>
+public interface StateProjectionReadOnlyDelegateProvider<in S, T> : PropertyDelegateProvider<S, StateProjectionReadOnlyDelegate<S, T>>
 
-public interface StateProjectionReadWriteDelegateProvider<in S, T> : StateProjectionReadWriteDelegate<S, T>,
-    PropertyDelegateProvider<S, StateProjectionReadWriteDelegate<S, T>>
+public interface StateProjectionReadWriteDelegateProvider<in S, T> : PropertyDelegateProvider<S, StateProjectionReadWriteDelegate<S, T>>
 
