@@ -23,36 +23,37 @@ public inline fun <reified T> signalOf(): SignalConfig<T> = SignalConfig(mutator
 
 
 @PublishedApi
-internal fun <T> delegateFrom(config: PlacedSignalConfig<T>): FfmStateProjectionReadWriteDelegate<T> =
-    FfmStateProjectionReadWriteDelegateImpl(config.accessor, config.offset)
+internal fun <T> delegateFrom(signalConfig: PlacedSignalConfig<T>): FfmStateProjectionReadWriteDelegate<T> =
+    FfmStateProjectionReadWriteDelegateImpl(signalConfig.accessor, signalConfig.offset)
 
-public inline fun <T> input(config: () -> PlacedSignalConfig<T>): ReadWriteProperty<FfmStateful, T> =
-    delegateFrom(config())
+public inline fun <T> input(signalConfig: SignalBuilder.() -> PlacedSignalConfig<T>): ReadWriteProperty<FfmStateful, T> =
+    delegateFrom(SignalBuilder.signalConfig())
 
-public inline fun <T> output(signal: () -> PlacedSignalConfig<T>): ReadOnlyProperty<FfmStateful, T> =
-    delegateFrom(signal())
+public inline fun <T> output(signalConfig: SignalBuilder.() -> PlacedSignalConfig<T>): ReadOnlyProperty<FfmStateful, T> =
+    delegateFrom(SignalBuilder.signalConfig())
 
-public inline fun <T> wire(signal: () -> PlacedSignalConfig<T>): ReadOnlyProperty<FfmStateful, T> =
-    delegateFrom(signal())
+public inline fun <T> wire(signalConfig: SignalBuilder.() -> PlacedSignalConfig<T>): ReadOnlyProperty<FfmStateful, T> =
+    delegateFrom(SignalBuilder.signalConfig())
 
-public inline fun <T> debugWire(signal: () -> PlacedSignalConfig<T>): ReadWriteProperty<FfmStateful, T> =
-    delegateFrom(signal())
+public inline fun <T> debugWire(signalConfig: SignalBuilder.() -> PlacedSignalConfig<T>): ReadWriteProperty<FfmStateful, T> =
+    delegateFrom(SignalBuilder.signalConfig())
 
-public inline fun <T> register(signal: () -> PlacedSignalConfig<T>): ReadOnlyProperty<FfmStateful, T> =
-    delegateFrom(signal())
+public inline fun <T> register(signalConfig: SignalBuilder.() -> PlacedSignalConfig<T>): ReadOnlyProperty<FfmStateful, T> =
+    delegateFrom(SignalBuilder.signalConfig())
 
-public inline fun <T> debugRegister(signal: () -> PlacedSignalConfig<T>): ReadWriteProperty<FfmStateful, T> =
-    delegateFrom(signal())
+public inline fun <T> debugRegister(signalConfig: SignalBuilder.() -> PlacedSignalConfig<T>): ReadWriteProperty<FfmStateful, T> =
+    delegateFrom(SignalBuilder.signalConfig())
 
 
 @PublishedApi
 internal fun <T> delegateFrom(config: PlacedMemoryConfig<T>): FfmStateProjectionReadOnlyDelegate<Memory<T>> =
-    FfmMemoryStateDelegate(config.accessor, config.offset, config.stride, config.depth)
+    FfmMemoryStateDelegate(config.accessor, config.offset, config.size)
 
+// TODO: Implement mutable memory
 public inline fun <T> memory(
-    accessor: MemoryBuilder.() -> PlacedMemoryConfig<T>
+    memoryConfig: MemoryBuilder.() -> PlacedMemoryConfig<T>
 ): ReadOnlyProperty<FfmStateful, Memory<T>> {
-    val config = MemoryBuilder.accessor()
+    val config = MemoryBuilder.memoryConfig()
     val delegate = delegateFrom(config)
     return delegate
 }

@@ -9,32 +9,31 @@ import kotlin.reflect.KProperty
 public class FfmMemoryStateDelegate<T>(
     private val accessor: FfmStateMutator<T>,
     private val offset: Long,
-    private val stride: Long,
-    private val depth: Long,
+    private val size: Long,
 ): FfmStateProjectionReadOnlyDelegate<Memory<T>> {
     override fun getValue(thisRef: FfmStateful, property: KProperty<*>): Memory<T> {
-        return MemoryImpl(thisRef.state)
+        return MemoryImpl(thisRef.state, size)
     }
 
     private inner class MemoryImpl(
         private val state: MemorySegment,
+        override val size: Long
     ) : Memory<T> {
-        override val stride: Long get() = this@FfmMemoryStateDelegate.stride
-        override val depth: Long get() = this@FfmMemoryStateDelegate.depth
 
-        override fun get(stride: Long, depth: Long): T {
-            require(stride < this@FfmMemoryStateDelegate.stride && depth < this@FfmMemoryStateDelegate.depth)
-            return accessor.getValue(state, calculatePosition(stride, depth))
+        override fun get(index: Long): T {
+            require(0 <= index && index < size) { "Index must be not negative and fit in memory size $size, got $index" }
+            return accessor.getValue(state, offset + index)
         }
 
-        override fun set(stride: Long, depth: Long, value: T) {
-            require(stride < this@FfmMemoryStateDelegate.stride && depth < this@FfmMemoryStateDelegate.depth)
-            accessor.setValue(state, calculatePosition(stride, depth), value)
+        override fun set(index: Long, value: T) {
+            require(0 <= index && index < size) { "Index must be not negative and fit in memory size $size, got $index" }
+            accessor.setValue(state, offset + index, value)
         }
 
         override fun set(data: List<T>) {
-            require(depth * stride == data.size.toLong()) {
-                val diff = data.size - depth * stride
+            check(size <= Int.MAX_VALUE) { "Memory size is out of Int value range, possible lost data" }
+            require(data.size.toLong() == size) {
+                val diff = data.size - size
                     "Only full memory can be overwritten. But got ${
                     if (diff < 0) {
                         "${-diff} elements less"
@@ -43,27 +42,21 @@ public class FfmMemoryStateDelegate<T>(
                     }
                 }"
             }
+
             // TODO: use effective copy
-            for (s in 0..<stride) {
-                for (d in 0..<depth) {
-                    set(s, d, data[(s * d).toInt()])
-                }
+            repeat(size.toInt()) {
+                set(it.toLong(), data[it])
             }
         }
 
         override fun toList(): List<T> {
-            val list = ArrayList<T>((stride * depth).toInt())
+            check(size <= Int.MAX_VALUE) { "Memory size is out of Int value range, possible lost data" }
+
             // TODO: use effective copy
-            for (s in 0..<stride) {
-                for (d in 0..<depth) {
-                    list[(s * d).toInt()] = get(s, d)
-                }
+            val list = List(size.toInt()) {
+                get(it.toLong())
             }
             return list
-        }
-
-        private fun calculatePosition(stride: Long, depth: Long): Long {
-            return offset + stride * depth * accessor.byteSize
         }
     }
 }

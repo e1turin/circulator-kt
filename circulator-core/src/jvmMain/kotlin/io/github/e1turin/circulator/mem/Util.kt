@@ -16,7 +16,9 @@ public inline fun <reified T> mutatorOf(): FfmStateMutator<T> {
         Double::class -> DoubleFfmMutator
         Char::class -> CharFfmMutator
         Bit::class -> BitFfmMutator
-        else -> throw IllegalArgumentException("Unsupported type: $clazz")
+        else -> throw IllegalArgumentException(
+            "Unsupported type: $clazz. Only primitive types, standard unsigned variants and Bit supported"
+        )
     } as FfmStateMutator<T>
 }
 
