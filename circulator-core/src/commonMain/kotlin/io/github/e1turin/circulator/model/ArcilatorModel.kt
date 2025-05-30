@@ -1,11 +1,11 @@
 package io.github.e1turin.circulator.model
 
 
-public interface BasicArcilatorModel<Dev> : WithEval {
+public interface BasicArcModel<Dev> : WithEval {
     public val view: Dev
 }
 
-public interface CompleteArcilatorModel<Dev> : BasicArcilatorModel<Dev>, WithInitial, WithFinally
+public interface CompleteArcModel<Dev> : BasicArcModel<Dev>, WithInitial, WithFinally
 
 
 public fun interface WithEval {
