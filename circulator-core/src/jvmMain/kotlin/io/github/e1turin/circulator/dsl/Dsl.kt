@@ -1,7 +1,5 @@
 package io.github.e1turin.circulator.dsl
 
-import io.github.e1turin.circulator.mem.FfmStateMutator
-import io.github.e1turin.circulator.mem.FfmStateViewer
 import io.github.e1turin.circulator.mem.mutatorOf
 import io.github.e1turin.circulator.model.Model
 import io.github.e1turin.circulator.state.*
@@ -10,17 +8,7 @@ import kotlin.properties.ReadOnlyProperty
 import kotlin.properties.ReadWriteProperty
 
 
-public inline infix fun <reified T> FfmStateViewer<T>.at(offset: Long): StateProjectionReadOnlyDelegate<FfmStateful, T> {
-    return FfmStateProjectionReadOnlyDelegateImpl(this, offset)
-}
-
-public inline infix fun <reified T> FfmStateMutator<T>.at(offset: Long): StateProjectionReadWriteDelegate<FfmStateful, T> {
-    return FfmStateProjectionReadWriteDelegateImpl(this, offset)
-}
-
-
 public inline fun <reified T> signalOf(): SignalConfig<T> = SignalConfig(mutatorOf<T>())
-
 
 @PublishedApi
 internal fun <T> delegateFrom(signalConfig: PlacedSignalConfig<T>): FfmStateProjectionReadWriteDelegate<T> =

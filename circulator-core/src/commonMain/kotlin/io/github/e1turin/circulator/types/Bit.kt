@@ -11,7 +11,6 @@ import kotlin.experimental.xor
 @JvmInline
 public value class Bit @PublishedApi internal constructor(internal val value: Byte) {
     public operator fun not(): Bit = Bit(value xor 0x01)
-    public operator fun inc(): Bit = Bit(value xor 0x01)
 
     public fun toByte(): Byte = value and 0x01
     public fun toInt(): Int = toByte().toInt()
@@ -25,3 +24,10 @@ public inline fun Int.toBit(): Bit = Bit(this.toByte())
 public inline fun Long.toBit(): Bit = Bit(this.toByte())
 
 public inline fun Boolean.toBit(): Bit = Bit(if (this) 1 else 0)
+
+public val Int.bit: Bit
+    get() = this.toBit().also {
+        require(this == 0 || this == 1) { "Bit can contain only 0 or 1 but got $this" }
+    }
+
+public val Boolean.bit: Bit get() = this.toBit()
