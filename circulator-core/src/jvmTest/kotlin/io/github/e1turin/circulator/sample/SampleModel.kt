@@ -2,57 +2,43 @@ package io.github.e1turin.circulator.sample
 
 import io.github.e1turin.circulator.dsl.*
 import io.github.e1turin.circulator.mem.BasicFfmLibrary
-import io.github.e1turin.circulator.model.CompleteArcilatorModel
-import io.github.e1turin.circulator.model.FfmModelLib
-import io.github.e1turin.circulator.model.toArcilatorFfmLib
+import io.github.e1turin.circulator.model.BasicArcModel
+import io.github.e1turin.circulator.model.FfmBasicArcModel
+import io.github.e1turin.circulator.model.toArcFfmModelLib
 import io.github.e1turin.circulator.state.FfmStateful
 import io.github.e1turin.circulator.types.Bit
+import io.github.e1turin.circulator.types.ReadOnlyMemory
 import io.github.e1turin.circulator.types.bit
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
-import java.lang.invoke.MethodHandle
 
 
-abstract class Dev : FfmStateful {
-    var clk by input { signalOf<Bit>() offset 0 }
-    var reset by input { signalOf<Bit>() offset 0 }
-    val mem by memory { 4 * signalOf<Int>() offset 3 }
-    val res by output { signalOf<Byte>() offset 8 }
-
-    companion object Fabric {
-        private const val STATE_SIZE: Long = 8
-
-        fun build(arena: Arena): Dev = object : Dev() {
-            override val state: MemorySegment = arena.allocate(STATE_SIZE)
-        }
-    }
+interface DevReadOnly {
+    val clk: Bit
+    val rst: Bit
+    val mem: ReadOnlyMemory<Int>
+    val res: Byte
 }
 
-class DevModel(
-    override val view: Dev,
-    lib: FfmModelLib
-) : CompleteArcilatorModel<Dev> {
+class Dev private constructor(
+    override val state: MemorySegment
+): DevReadOnly, FfmStateful {
 
-    override fun eval() {
-        evalHandle.invokeExact(view.state)
-    }
+    override var clk by input { signalOf<Bit>() offset 0 }
 
-    override fun initial() {
-        initialHandle.invokeExact(view.state)
-    }
+    override var rst by input { signalOf<Bit>() offset 0 }
 
-    override fun finally() {
-        finallyHandle.invokeExact(view.state)
-    }
+    override val mem by memory { 4 * signalOf<Int>() offset 3 }
 
-    private val evalHandle: MethodHandle = lib.handle("Dev_eval")
-    private val initialHandle: MethodHandle = lib.handle("Dev_initial")
-    private val finallyHandle: MethodHandle = lib.handle("Dev_final")
+    override val res by output { signalOf<Byte>() offset 8 }
 
-    companion object Fabric {
-        fun build(devArena: Arena, libArena: Arena = Arena.ofAuto()) = DevModel(
-            Dev.build(devArena),
-            BasicFfmLibrary("dev", libArena).toArcilatorFfmLib()
+    companion object {
+        private const val STATE_SIZE: Long = 8
+
+        fun model(devArena: Arena, libArena: Arena = Arena.ofAuto()): BasicArcModel<Dev> = FfmBasicArcModel(
+            "Dev",
+            Dev(devArena.allocate(STATE_SIZE)),
+            BasicFfmLibrary("dev", libArena).toArcFfmModelLib()
         )
     }
 }
@@ -60,16 +46,16 @@ class DevModel(
 
 fun test() {
     Arena.ofAuto().use {
-        val counter = DevModel.build(it, it)
+        val counter = Dev.model(it)
 
         counter.eval {
             clk = 0.bit
         }
 
         counter.eval {
-            reset = 1.bit
+            rst = 1.bit
             counter.eval(10) { clk = !clk }
-            reset = 1.bit
+            rst = 1.bit
         }
 
         counter.view.mem[2] = 1
