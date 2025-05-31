@@ -1,7 +1,7 @@
 package io.github.e1turin.circulator.state
 
 import io.github.e1turin.circulator.mem.FfmStateMutator
-import io.github.e1turin.circulator.types.Memory
+import io.github.e1turin.circulator.types.MutableMemory
 import java.lang.foreign.MemorySegment
 import kotlin.reflect.KProperty
 
@@ -10,15 +10,15 @@ public class FfmMemoryStateDelegate<T>(
     private val accessor: FfmStateMutator<T>,
     private val offset: Long,
     private val size: Long,
-): FfmStateProjectionReadOnlyDelegate<Memory<T>> {
-    override fun getValue(thisRef: FfmStateful, property: KProperty<*>): Memory<T> {
-        return MemoryImpl(thisRef.state, size)
+): FfmStateProjectionReadOnlyDelegate<MutableMemory<T>> {
+    override fun getValue(thisRef: FfmStateful, property: KProperty<*>): MutableMemory<T> {
+        return MutableMemoryImpl(thisRef.state, size)
     }
 
-    private inner class MemoryImpl(
+    private inner class MutableMemoryImpl(
         private val state: MemorySegment,
         override val size: Long
-    ) : Memory<T> {
+    ) : MutableMemory<T> {
 
         override fun get(index: Long): T {
             require(0 <= index && index < size) { "Index must be not negative and fit in memory size $size, got $index" }

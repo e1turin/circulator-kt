@@ -1,22 +1,21 @@
 package io.github.e1turin.circulator.sample
 
 import io.github.e1turin.circulator.dsl.*
-import io.github.e1turin.circulator.mem.BasicFfmLibrary
-import io.github.e1turin.circulator.model.BasicArcModel
-import io.github.e1turin.circulator.model.FfmBasicArcModel
-import io.github.e1turin.circulator.model.toArcFfmModelLib
+import io.github.e1turin.circulator.model.FfmDevFactory
 import io.github.e1turin.circulator.state.FfmStateful
 import io.github.e1turin.circulator.types.Bit
-import io.github.e1turin.circulator.types.ReadOnlyMemory
+import io.github.e1turin.circulator.types.Memory
 import io.github.e1turin.circulator.types.bit
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 
 
+// make it optional
 interface DevReadOnly {
     val clk: Bit
     val rst: Bit
-    val mem: ReadOnlyMemory<Int>
+    val mem: Memory<Int>
+    val romem: Memory<Int>
     val res: Byte
 }
 
@@ -26,27 +25,27 @@ class Dev private constructor(
 
     override var clk by input { signalOf<Bit>() offset 0 }
 
-    override var rst by input { signalOf<Bit>() offset 0 }
+    override var rst by input { signalOf<Bit>() offset 1 }
 
-    override val mem by memory { 4 * signalOf<Int>() offset 3 }
+    override val mem by mutableMemory { 4 * signalOf<Int>() offset 3 }
+    override val romem by memory { 4 * signalOf<Int>() offset 3 }
 
-    override val res by output { signalOf<Byte>() offset 8 }
+    override val res by output { signalOf<Byte>() bits 8..0 offset 8 }
 
-    companion object {
+    companion object Factory: FfmDevFactory<Dev> {
         private const val STATE_SIZE: Long = 8
 
-        fun model(devArena: Arena, libArena: Arena = Arena.ofAuto()): BasicArcModel<Dev> = FfmBasicArcModel(
-            "Dev",
-            Dev(devArena.allocate(STATE_SIZE)),
-            BasicFfmLibrary("dev", libArena).toArcFfmModelLib()
-        )
+        override val devName: String = "Dev"
+        override val libName: String = "dev"
+
+        override fun build(arena: Arena) = Dev(arena.allocate(STATE_SIZE))
     }
 }
 
 
 fun test() {
     Arena.ofAuto().use {
-        val counter = Dev.model(it)
+        val counter = Models.arcilatorBased(Dev) { dev.arena = it }
 
         counter.eval {
             clk = 0.bit
@@ -59,6 +58,7 @@ fun test() {
         }
 
         counter.view.mem[2] = 1
+        counter.view.romem[2]
 
         counter.eval(20) { clk = !clk }
 
