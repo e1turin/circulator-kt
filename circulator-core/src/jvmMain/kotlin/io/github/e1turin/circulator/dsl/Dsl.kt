@@ -1,8 +1,8 @@
 package io.github.e1turin.circulator.dsl
 
 import io.github.e1turin.circulator.mem.mutatorOf
-import io.github.e1turin.circulator.model.Model
 import io.github.e1turin.circulator.state.*
+import io.github.e1turin.circulator.types.MutableMemory
 import io.github.e1turin.circulator.types.Memory
 import kotlin.properties.ReadOnlyProperty
 import kotlin.properties.ReadWriteProperty
@@ -10,42 +10,50 @@ import kotlin.properties.ReadWriteProperty
 
 public inline fun <reified T> signalOf(): SignalConfig<T> = SignalConfig(mutatorOf<T>())
 
+public inline fun <T> FfmStateful.input(
+    config: SignalBuilder.() -> PlacedSignalConfig<T>
+): ReadWriteProperty<FfmStateful, T> = delegateFrom(SignalBuilder.config())
+
+public inline fun <T> FfmStateful.output(
+    config: SignalBuilder.() -> PlacedSignalConfig<T>
+): ReadOnlyProperty<FfmStateful, T> = delegateFrom(SignalBuilder.config())
+
+public inline fun <T> FfmStateful.wire(
+    config: SignalBuilder.() -> PlacedSignalConfig<T>
+): ReadOnlyProperty<FfmStateful, T> = delegateFrom(SignalBuilder.config())
+
+public inline fun <T> FfmStateful.debugWire(
+    config: SignalBuilder.() -> PlacedSignalConfig<T>
+): ReadWriteProperty<FfmStateful, T> = delegateFrom(SignalBuilder.config())
+
+public inline fun <T> FfmStateful.register(
+    config: SignalBuilder.() -> PlacedSignalConfig<T>
+): ReadOnlyProperty<FfmStateful, T> = delegateFrom(SignalBuilder.config())
+
+public inline fun <T> FfmStateful.debugRegister(
+    config: SignalBuilder.() -> PlacedSignalConfig<T>
+): ReadWriteProperty<FfmStateful, T> = delegateFrom(SignalBuilder.config())
+
+public inline fun <T> FfmStateful.memory(
+    config: MemoryBuilder.() -> PlacedMemoryConfig<T>
+): ReadOnlyProperty<FfmStateful, Memory<T>> = mutableMemory(config)
+
+public inline fun <T> FfmStateful.mutableMemory(
+    config: MemoryBuilder.() -> PlacedMemoryConfig<T>
+): ReadOnlyProperty<FfmStateful, MutableMemory<T>> = delegateFrom(MemoryBuilder.config())
+
+
 @PublishedApi
-internal fun <T> delegateFrom(signalConfig: PlacedSignalConfig<T>): FfmStateProjectionReadWriteDelegate<T> =
-    FfmStateProjectionReadWriteDelegateImpl(signalConfig.accessor, signalConfig.offset)
-
-public inline fun <T> input(signalConfig: SignalBuilder.() -> PlacedSignalConfig<T>): ReadWriteProperty<FfmStateful, T> =
-    delegateFrom(SignalBuilder.signalConfig())
-
-public inline fun <T> output(signalConfig: SignalBuilder.() -> PlacedSignalConfig<T>): ReadOnlyProperty<FfmStateful, T> =
-    delegateFrom(SignalBuilder.signalConfig())
-
-public inline fun <T> wire(signalConfig: SignalBuilder.() -> PlacedSignalConfig<T>): ReadOnlyProperty<FfmStateful, T> =
-    delegateFrom(SignalBuilder.signalConfig())
-
-public inline fun <T> debugWire(signalConfig: SignalBuilder.() -> PlacedSignalConfig<T>): ReadWriteProperty<FfmStateful, T> =
-    delegateFrom(SignalBuilder.signalConfig())
-
-public inline fun <T> register(signalConfig: SignalBuilder.() -> PlacedSignalConfig<T>): ReadOnlyProperty<FfmStateful, T> =
-    delegateFrom(SignalBuilder.signalConfig())
-
-public inline fun <T> debugRegister(signalConfig: SignalBuilder.() -> PlacedSignalConfig<T>): ReadWriteProperty<FfmStateful, T> =
-    delegateFrom(SignalBuilder.signalConfig())
-
-
-@PublishedApi
-internal fun <T> delegateFrom(config: PlacedMemoryConfig<T>): FfmStateProjectionReadOnlyDelegate<Memory<T>> =
-    FfmMemoryStateDelegate(config.accessor, config.offset, config.size)
-
-// TODO: Implement mutable memory
-public inline fun <T> memory(
-    memoryConfig: MemoryBuilder.() -> PlacedMemoryConfig<T>
-): ReadOnlyProperty<FfmStateful, Memory<T>> {
-    val config = MemoryBuilder.memoryConfig()
-    val delegate = delegateFrom(config)
-    return delegate
+internal fun <T> FfmStateful.delegateFrom(config: PlacedSignalConfig<T>): FfmStateProjectionReadWriteDelegate<T> {
+    val offset = scaledOffset(config.offset, config.accessor.byteSize)
+    return FfmStateProjectionReadWriteDelegateImpl(config.accessor, offset)
 }
 
+@PublishedApi
+internal fun <T> FfmStateful.delegateFrom(config: PlacedMemoryConfig<T>): FfmStateProjectionReadOnlyDelegate<MutableMemory<T>> {
+    val offset = scaledOffset(config.offset, config.accessor.byteSize)
+    return FfmMemoryStateDelegate(config.accessor, offset, config.size)
+}
 
 @PublishedApi
 internal fun scaledOffset(offset: Long, byteSize: Long): Long {
@@ -54,29 +62,3 @@ internal fun scaledOffset(offset: Long, byteSize: Long): Long {
     }
     return offset / byteSize
 }
-
-
-public inline fun <reified T> Model.plainStateProjection(
-    offset: Long,
-    projectionType: StateProjectionType
-): StateProjectionReadWriteDelegate<FfmStateful, T> {
-    require(offset < numStateBytes) { "Offset $offset bounded to state size $numStateBytes" }
-
-    val clazz = T::class
-    val memoryAccessor = mutatorOf<T>()
-    val byteSize: Long = memoryAccessor.byteSize
-
-    require(offset + byteSize in 1..numStateBytes) {
-        "Accessed memory - $byteSize bytes for ${clazz.qualifiedName} (${projectionType.name}) on offset $offset -" +
-            " must be in bounds of state size $numStateBytes but it is not!"
-    }
-
-    return FfmStateProjectionReadWriteDelegateImpl(memoryAccessor, scaledOffset(offset, byteSize))
-}
-
-
-public inline fun <reified T> Model.input(offset: Long) = plainStateProjection<T>(offset, StateProjectionType.INPUT)
-public inline fun <reified T> Model.output(offset: Long) = plainStateProjection<T>(offset, StateProjectionType.OUTPUT)
-public inline fun <reified T> Model.register(offset: Long) = plainStateProjection<T>(offset, StateProjectionType.REGISTER)
-//public inline fun <reified T> Model.memory(offset: Long, layout: MemoryLayoutBuilder.()->MemoryLayout) = plainStateProjection<T>(offset, _root_ide_package_.io.github.e1turin.circulator.state.StateProjectionType.MEMORY).also { MemoryLayoutBuilder.layout() }
-public inline fun <reified T> Model.wire(offset: Long) = plainStateProjection<T>(offset, StateProjectionType.WIRE)
