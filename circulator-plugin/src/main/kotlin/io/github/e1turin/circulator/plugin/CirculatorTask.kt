@@ -3,7 +3,7 @@ package io.github.e1turin.circulator.plugin
 import io.github.e1turin.circulator.config.PluginConfig
 import io.github.e1turin.circulator.config.StateType
 import io.github.e1turin.circulator.gen.generateFileSpec
-import io.github.e1turin.circulator.interop.arcilator.StateFile
+import io.github.e1turin.circulator.sim.StateFile
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFile

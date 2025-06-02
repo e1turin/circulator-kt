@@ -1,4 +1,4 @@
-package io.github.e1turin.circulator.interop.arcilator
+package io.github.e1turin.circulator.sim
 
 import io.github.e1turin.circulator.state.StateProjectionType
 import kotlinx.serialization.Serializable
