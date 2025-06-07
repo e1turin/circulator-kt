@@ -8,7 +8,7 @@ plugins {
 }
 
 kotlin {
-    explicitApi = ExplicitApiMode.Strict
+    explicitApi = ExplicitApiMode.Disabled
 
     jvmToolchain(22)
 }
