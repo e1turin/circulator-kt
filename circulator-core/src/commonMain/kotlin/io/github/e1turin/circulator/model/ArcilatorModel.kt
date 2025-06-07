@@ -2,7 +2,7 @@ package io.github.e1turin.circulator.model
 
 
 public interface BasicArcModel<Dev> : WithEval {
-    public val view: Dev
+    public val io: Dev
 }
 
 public interface CompleteArcModel<Dev> : BasicArcModel<Dev>, WithInitial, WithFinally

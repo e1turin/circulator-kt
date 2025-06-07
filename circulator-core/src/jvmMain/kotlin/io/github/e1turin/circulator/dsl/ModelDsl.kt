@@ -51,6 +51,6 @@ public inline fun <D> BasicArcModel<D>.eval(
     times: Int = 1,
     block: D.() -> Unit
 ) = repeat(times) {
-    view.block()
+    io.block()
     eval()
 }

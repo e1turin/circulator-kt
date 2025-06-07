@@ -6,12 +6,12 @@ import java.lang.invoke.MethodHandle
 
 public class FfmBasicArcModel<D: FfmStateful>(
     name: String,
-    override val view: D,
+    override val io: D,
     lib: FfmModelLib,
 ) : BasicArcModel<D> {
 
     override fun eval() {
-        evalHandle.invokeExact(view.state)
+        evalHandle.invokeExact(io.state)
     }
 
     private val evalHandle: MethodHandle = lib.handle("${name}_eval")
@@ -20,20 +20,20 @@ public class FfmBasicArcModel<D: FfmStateful>(
 
 public class FfmCompleteArcModel<D: FfmStateful>(
     name: String,
-    override val view: D,
+    override val io: D,
     lib: FfmModelLib,
 ) : CompleteArcModel<D> {
 
     override fun eval() {
-        evalHandle.invokeExact(view.state)
+        evalHandle.invokeExact(io.state)
     }
 
     override fun initial() {
-        initialHandle.invokeExact(view.state)
+        initialHandle.invokeExact(io.state)
     }
 
     override fun finally() {
-        finallyHandle.invokeExact(view.state)
+        finallyHandle.invokeExact(io.state)
     }
 
     private val evalHandle: MethodHandle = lib.handle("${name}_eval")

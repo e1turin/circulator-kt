@@ -15,8 +15,13 @@ interface DevReadOnly {
     val clk: Bit
     val rst: Bit
     val mem: Memory<Int>
-    val romem: Memory<Int>
+    val internalMem: Memory<Int>
     val res: Byte
+}
+
+interface DevIO {
+    var clk: Bit
+    var rst: Bit
 }
 
 class Dev private constructor(
@@ -28,7 +33,7 @@ class Dev private constructor(
     override var rst by input { signalOf<Bit>() offset 1 }
 
     override val mem by mutableMemory { 4 * signalOf<Int>() offset 3 }
-    override val romem by memory { 4 * signalOf<Int>() offset 3 }
+    override val internalMem by memory { 4 * signalOf<Int>() offset 3 }
 
     override val res by output { signalOf<Byte>() bits 8..0 offset 8 }
 
@@ -57,18 +62,18 @@ fun test() {
             rst = 1.bit
         }
 
-        counter.view.mem[2] = 1
-        counter.view.romem[2]
+        counter.io.mem[2] = 1
+        counter.io.internalMem[2]
 
         counter.eval(20) { clk = !clk }
 
-        counter.view.apply {
+        counter.io.apply {
             mem[2] = res.toInt()
         }
 
         counter.eval(20) { clk = !clk }
 
-        val result = counter.view.res
+        val result = counter.io.res
 
     }
 }
