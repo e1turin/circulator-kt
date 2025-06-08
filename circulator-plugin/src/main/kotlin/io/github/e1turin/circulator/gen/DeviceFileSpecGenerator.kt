@@ -1,17 +1,9 @@
 package io.github.e1turin.circulator.gen
 
-import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.CodeBlock
-import com.squareup.kotlinpoet.FileSpec
-import com.squareup.kotlinpoet.FunSpec
-import com.squareup.kotlinpoet.KModifier
-import com.squareup.kotlinpoet.LONG
-import com.squareup.kotlinpoet.ParameterizedTypeName
+import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import com.squareup.kotlinpoet.PropertySpec
-import com.squareup.kotlinpoet.TypeName
-import com.squareup.kotlinpoet.TypeSpec
 import io.github.e1turin.circulator.model.FfmDevFactory
+import io.github.e1turin.circulator.state.FfmStateful
 import org.jetbrains.kotlin.com.intellij.util.applyIf
 import java.lang.foreign.Arena
 
@@ -21,7 +13,7 @@ fun interface FileGenerator {
 }
 
 fun interface InterfaceGenerator {
-    fun interfaceSpec (): TypeSpec
+    fun interfaceSpec(): TypeSpec
 }
 
 fun interface ClassGenerator {
@@ -89,34 +81,9 @@ class DeviceIfaceGenV1(
 
 
 class ClassConfig(
-    val className: String,
+    val className: ClassName,
     val companionConfig: CompanionConfig
 )
-
-class DeviceClassGenV1(
-    val config: ClassConfig,
-    val propsConfig: List<PropertyConfig>
-): ClassGenerator {
-    override fun classSpec(): TypeSpec {
-        val builder = TypeSpec.classBuilder(config.className)
-            .addProps()
-            .addCompanion()
-
-        return builder.build()
-    }
-
-    private fun TypeSpec.Builder.addCompanion() = apply {
-        val gen = DeviceClassCompanionGenV1(config.companionConfig)
-        addType(gen.companionSpec())
-    }
-
-    private fun TypeSpec.Builder.addProps() = apply {
-        propsConfig // TODO: optimize
-            .map { DevicePropGenV1(it).propertySpec() }
-            .forEach { addProperty(it) }
-    }
-}
-
 
 class CompanionConfig(
     val stateSize: Long,
@@ -124,53 +91,71 @@ class CompanionConfig(
     val libName: String
 )
 
-class DeviceClassCompanionGenV1(
-    val config: CompanionConfig
-): ClassCompanionGenerator {
-    override fun companionSpec(): TypeSpec {
-        // TODO: does it work so? Iface is generic
-        val factoryIface = ClassName("io.github.e1turin.circulator.model", "FfmDevFactory")
-        val className = ClassName("", "")
-        val arenaClassName = ClassName("lang.java.forign", "Arena")
+class DeviceClassGenV1(
+    val config: ClassConfig,
+    val propsConfig: List<PropertyConfig>
+): ClassGenerator, ClassCompanionGenerator {
+    override fun classSpec(): TypeSpec {
+        val builder = TypeSpec.classBuilder(config.className)
+            .superclass(FfmStateful::class)
+            .addProps()
+            .addCompanion()
 
+        return builder.build()
+    }
+
+    private fun TypeSpec.Builder.addCompanion() = apply {
+        addType(companionSpec())
+    }
+
+    private fun TypeSpec.Builder.addProps() = apply {
+        addProperties( // TODO: optimize
+            propsConfig.map { DevicePropGenV1(it).propertySpec() }
+        )
+    }
+
+    override fun companionSpec(): TypeSpec {
         val stateSizeProp = PropertySpec.builder("STATE_SIZE", LONG)
             .addModifiers(KModifier.PRIVATE, KModifier.CONST)
-            .initializer("%L", config.stateSize)
+            .initializer("%L", config.companionConfig.stateSize)
+            .build()
+
+        val devNameProp = PropertySpec.builder("devName", String::class)
+            .addModifiers(KModifier.OVERRIDE)
+            .initializer("%S", config.companionConfig.devName)
+            .build()
+
+        val libNameProp = PropertySpec.builder("libName", String::class)
+            .addModifiers(KModifier.OVERRIDE)
+            .initializer("%S", config.companionConfig.libName)
+            .build()
+
+        val factoryMethod = FunSpec.builder("build")
+            .addModifiers(KModifier.OVERRIDE)
+            .addParameter("arena", Arena::class)
+            .returns(config.className)
+            .addStatement("return %T(arena.allocate(${stateSizeProp.name}))", config.className)
             .build()
 
         val builder = TypeSpec.companionObjectBuilder()
-            .superclass(factoryIface.parameterizedBy(className))
+            .superclass(FfmDevFactory::class.asClassName().parameterizedBy(config.className))
             .addProperty(stateSizeProp)
-            .addProperty(
-                PropertySpec.builder("devName", String::class.java)
-                    .addModifiers(KModifier.OVERRIDE)
-                    .initializer("%S", config.devName)
-                    .build()
-            )
-            .addProperty(
-                PropertySpec.builder("libName", String::class.java)
-                    .addModifiers(KModifier.OVERRIDE)
-                    .initializer("%S", config.libName)
-                    .build()
-            )
-            .addFunction(
-                FunSpec.builder("build")
-                    .addModifiers(KModifier.OVERRIDE)
-                    .addParameter("arena", arenaClassName)
-                    .returns(className)
-                    .addStatement("return $className(arena.allocate(${stateSizeProp.name}))")
-                    .build()
-            )
+            .addProperty(devNameProp)
+            .addProperty(libNameProp)
+            .addFunction(factoryMethod)
+
         return builder.build()
     }
 }
 
+
 class PropertyConfig(
     val name: String, // not forget 'internal' suffix
-    val type: TypeName,
     val open: Boolean,
     val override: Boolean,
     val mutable: Boolean,
+    val delegate: MemberName,
+    val type: TypeName,
     val numBits: Int,
     val offset: Long,
 )
@@ -184,14 +169,15 @@ class DevicePropGenV1(
             .applyIf(config.override) { addModifiers(KModifier.OVERRIDE) }
             .applyIf(config.open) { addModifiers(KModifier.OPEN) }
             .mutable(config.mutable)
-            .addDelegate()
-        //TODO: prop build logic
+            .delegate(
+                CodeBlock.of(
+                    "%M { signalOf<%T>() bits %L offset %L }",
+                    config.delegate,
+                    config.type,
+                    config.numBits,
+                    config.offset
+                )
+            )
         return builder.build()
-    }
-
-    private fun PropertySpec.Builder.addDelegate() = apply {
-        val cb = CodeBlock.builder()
-        delegate(cb.build())
-        // TODO
     }
 }
