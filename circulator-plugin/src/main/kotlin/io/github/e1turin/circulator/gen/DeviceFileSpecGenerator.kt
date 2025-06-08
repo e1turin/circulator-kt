@@ -4,29 +4,9 @@ import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import io.github.e1turin.circulator.model.FfmDevFactory
 import io.github.e1turin.circulator.state.FfmStateful
+import io.github.e1turin.circulator.state.StateProjectionType
 import org.jetbrains.kotlin.com.intellij.util.applyIf
 import java.lang.foreign.Arena
-
-
-fun interface FileGenerator {
-    fun fileSpec(): FileSpec
-}
-
-fun interface InterfaceGenerator {
-    fun interfaceSpec(): TypeSpec
-}
-
-fun interface ClassGenerator {
-    fun classSpec(): TypeSpec
-}
-
-fun interface ClassCompanionGenerator {
-    fun companionSpec(): TypeSpec
-}
-
-fun interface PropertyGenerator {
-    fun propertySpec(): PropertySpec
-}
 
 
 class FileConfig(
@@ -43,6 +23,7 @@ class DeviceFileGeneratorV1(
     override fun fileSpec(): FileSpec {
 
         val builder = FileSpec.builder(config.packageName, config.fileName)
+            .addFileComment(HEADER_COMMENT)
             .addClass()
             .addInterface()
 
@@ -180,4 +161,65 @@ class DevicePropGenV1(
             )
         return builder.build()
     }
+}
+
+internal fun createFileConfig(
+    settings: GenerationSettings
+): FileConfig = with(settings) {
+    val ifaceCfg = null
+    val classCfg = ClassConfig(
+        className = ClassName(packageName, modelInfo.name),
+        companionConfig = CompanionConfig(
+            stateSize = modelInfo.numStateBytes.toLong(), // cast from ULong
+            devName = modelInfo.name,
+            libName = modelInfo.name.lowercase()
+        )
+    )
+
+    // TODO: Improve
+    val allowedTypes = setOf(StateProjectionType.INPUT, StateProjectionType.OUTPUT)
+    val propsCfg = modelInfo.states
+        .filter { it.type in allowedTypes }
+        .map {
+            PropertyConfig(
+                name = it.name,
+                open = false,
+                override = false,
+                mutable = false,
+                delegate = propertyDelegate(it.type),
+                type = ClassName("kotlin.lang", "Long"),
+                numBits = it.numBits.toInt(), // cast from UInt
+                offset = it.offset.toLong() // cast from ULong
+            )
+        }
+
+    val fileCfg = FileConfig(
+        packageName = packageName,
+        fileName = modelInfo.name,
+        classConfig = classCfg,
+        ifaceConfig = ifaceCfg,
+        propsConfig = propsCfg
+    )
+
+    return fileCfg
+}
+
+private fun propertyDelegate(type: StateProjectionType): MemberName {
+    val packageName = "io.github.e1turin.circulator.dsl"
+
+    // TODO: add debug*, mutableMemory, ...
+    val delegateName = when(type) {
+        StateProjectionType.INPUT -> "input"
+        StateProjectionType.OUTPUT -> "output"
+        StateProjectionType.REGISTER -> "register"
+        StateProjectionType.MEMORY -> "memory"
+        StateProjectionType.WIRE -> "wire"
+    }
+
+    return MemberName(packageName, delegateName)
+}
+
+internal fun generateFileSpec(settings: GenerationSettings): FileSpec {
+    val gen: FileGenerator = DeviceFileGeneratorV1(createFileConfig(settings))
+    return gen.fileSpec()
 }
