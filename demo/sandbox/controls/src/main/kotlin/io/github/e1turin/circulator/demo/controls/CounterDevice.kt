@@ -1,5 +1,6 @@
 package io.github.e1turin.circulator.demo.controls
 
+import io.github.e1turin.circulator.demo.chisel.generated.ClickCounterModel
 import io.github.e1turin.circulator.demo.chisel.generated.CounterChiselModel
 import space.kscience.controls.api.Device
 import space.kscience.controls.spec.*
@@ -18,25 +19,28 @@ interface ICounterDevice : Device {
 class CounterDevice(context: Context, meta: Meta, arena: Arena) :
     DeviceBySpec<ICounterDevice>(Spec, context, meta), ICounterDevice {
 
-    val model: CounterChiselModel = CounterChiselModel.instance(arena, "counterchisel")
+//    val model: CounterChiselModel = CounterChiselModel.instance(arena, "counterchisel")
+    val model = ClickCounterModel.instance(arena, "ClickCounter")
 
     override fun reset() {
-        model.reset = 1.toUByte()
-        model.clock = 1.toUByte()
+        model.reset = 1//.toUByte()
+        model.clock = 1//.toUByte()
         model.eval()
-        model.clock = 0.toUByte()
+        model.clock = 0//.toUByte()
         model.eval()
-        model.reset = 0.toUByte()
+        model.reset = 0//.toUByte()
     }
 
     override fun click() {
-        model.clock = 1.toUByte()
+        model.io_click = 1
+        model.clock = 1//.toUByte()
         model.eval()
-        model.clock = 0.toUByte()
+        model.clock = 0//.toUByte()
         model.eval()
+        model.io_click = 0
     }
 
-    override val countValue: Int get() = model.count.toInt()
+    override val countValue: Int get() = model.io_count.toInt()
 
     companion object Spec : DeviceSpec<ICounterDevice>(), FfmMetaFactory<CounterDevice> {
         val count by numberProperty { countValue }

@@ -141,18 +141,18 @@ fun runPrecompiledCounterModel(n: Int = 10): Int {
 
         fun CounterModel.step(times: Int = 1) {
             for (i in 1..times) {
-                clk = 1.toUByte()
+                clk = 1
                 eval()
-                clk = 0.toUByte()
+                clk = 0
                 eval()
             }
         }
 
         fun CounterModel.reset(steps: Int = 0) {
-            reset = 1.toUByte()
+            reset = 1
             eval()
             step(steps)
-            reset = 0.toUByte()
+            reset = 0
         }
 
         dut.reset(7)
@@ -165,16 +165,16 @@ fun runPrecompiledCounterModel(n: Int = 10): Int {
 
 fun runCounterChisel(n: Int = 10): Int {
     fun CounterChiselModel.tick() {
-        clock = 1.toUByte()
+        clock = 1
         eval()
-        clock = 0.toUByte()
+        clock = 0
         eval()
     }
 
     fun CounterChiselModel.init() {
-        reset = 1.toUByte()
+        reset = 1
         for (i in 1..7) tick()
-        reset = 0.toUByte()
+        reset = 0
     }
 
     Arena.ofConfined().use { arena ->
