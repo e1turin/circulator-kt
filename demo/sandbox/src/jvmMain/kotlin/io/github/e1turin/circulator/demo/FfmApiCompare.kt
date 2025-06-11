@@ -188,6 +188,30 @@ fun runCounterChisel(n: Int = 10): Int {
     }
 }
 
+fun runCirculator(n: Int = 10): Int {
+    Arena.ofConfined().use { arena ->
+        val counter = CounterChiselModel.instance(arena, "counterchisel")
+
+        counter.reset = 1
+        for (i in 1..7) {
+            counter.clock = 1
+            counter.eval()
+            counter.clock = 0
+            counter.eval()
+        }
+        counter.reset = 0
+
+        for (i in 1..n) {
+            counter.clock = 1
+            counter.eval()
+            counter.clock = 0
+            counter.eval()
+        }
+
+        return counter.count.toInt()
+    }
+}
+
 //fun runCounterVerilog(n: Int = 10): Int {
 //    fun CounterVerilogModel.tick() {
 //        clk = 1
