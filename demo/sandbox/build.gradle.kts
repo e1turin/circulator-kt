@@ -13,6 +13,12 @@ plugins {
     id("io.github.e1turin.circulator.plugin")
 }
 
+
+
+circulator {
+    config = file("src/jvmMain/resources/circulator/config.json5")
+}
+
 kotlin {
     jvm {
         compilerOptions {
@@ -44,10 +50,6 @@ kotlin {
             }
         }
     }
-}
-
-circulator {
-    config = file("src/jvmMain/resources/circulator/config.json5")
 }
 
 tasks.named("generateKotlinClasses") {

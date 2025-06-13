@@ -80,17 +80,14 @@
       "package": "io.github.e1turin.circulator.demo.chisel.generated",
       "state-file": "chisel/build/generated/sources/circulator/arcilator/counter/ClickCounter-states.json",
       "model": {
-        "open": true,
-        "all-states-open": true,
-        "all-states-mutable": false,
         "all-states-type": [
           "input",
           "output",
-          //          "register",
-          //          "memory",
-          //          "wire"
+          "register",
+          "memory",
+          "wire"
         ],
-        //        "states": {}
+        "states": {}
       },
       "library": {
         "open": true
