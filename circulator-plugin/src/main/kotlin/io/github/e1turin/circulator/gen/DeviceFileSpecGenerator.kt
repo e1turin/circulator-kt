@@ -24,8 +24,8 @@ class DeviceFileGeneratorV1(
 
         val builder = FileSpec.builder(config.packageName, config.fileName)
             .addFileComment(HEADER_COMMENT)
-            .addClass()
             .addInterface()
+            .addClass()
 
         return builder.build()
     }
@@ -145,6 +145,8 @@ class PropertyConfig(
 class DevicePropGenV1(
     val config: PropertyConfig
 ): PropertyGenerator {
+    private val propertyTemplate = "%M { signalOf<%T>() bits %L offset %L }"
+
     override fun propertySpec(): PropertySpec {
         val builder = PropertySpec.builder(config.name, config.type)
             .applyIf(config.override) { addModifiers(KModifier.OVERRIDE) }
@@ -152,7 +154,7 @@ class DevicePropGenV1(
             .mutable(config.mutable)
             .delegate(
                 CodeBlock.of(
-                    "%M { signalOf<%T>() bits %L offset %L }",
+                    propertyTemplate,
                     config.delegate,
                     config.type,
                     config.numBits,
