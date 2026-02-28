@@ -10,7 +10,7 @@ plugins {
 kotlin {
     explicitApi = ExplicitApiMode.Strict
 
-    jvmToolchain(22)
+    jvmToolchain(25)
 }
 
 dependencies {
