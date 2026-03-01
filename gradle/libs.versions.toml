@@ -8,12 +8,24 @@ kotlin-coroutines = "1.10.2"
 mavenPublish = "0.29.0"
 compose-multiplatform = "1.10.1"
 
+# for demo:
+rsocket = "0.20.0"
+visionforge = "0.5.0"
+logback = "1.5.18"
+
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlin-serialization" }
 kotlinx-coroutines-swing = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-swing", version.ref = "kotlin-coroutines" }
 kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlin-poet" }
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+
+# for demo:
+rsocket-ktor-client = { module = "io.rsocket.kotlin:ktor-client-rsocket", version.ref = "rsocket" }
+rsocket-ktor-server = { module = "io.rsocket.kotlin:ktor-server-rsocket", version.ref = "rsocket" }
+plotlykt-core = { module = "space.kscience:plotly-kt-core", version.ref = "visionforge" }
+plotlykt-server = { module = "space.kscience:plotly-kt-server", version.ref = "visionforge" }
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin-multiplatform" }

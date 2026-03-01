@@ -5,9 +5,8 @@
 
 package io.github.e1turin.circulator.demo.counter
 
-import chisel3._
-// _root_ disambiguates from package chisel3.util.circt if user imports chisel3.util._
 import _root_.circt.stage.ChiselStage
+import chisel3._
 
 
 class CounterChisel extends Module {
@@ -19,9 +18,27 @@ class CounterChisel extends Module {
   counter := counter + 1.U
 }
 
+class ClickCounter extends Module {
+  val io = IO(new Bundle {
+    val click = Input(Bool())
+    val count = Output(UInt(8.W))
+  })
+
+  val count = RegInit(0.U(8.W))
+  io.count := count
+
+  when(io.click) {
+    count := count + 1.U
+  }
+}
+
 object Main extends App {
   ChiselStage.emitCHIRRTLFile(
     new CounterChisel,
+    Array("--target-dir", System.getProperty("chisel.output.dir")),
+  )
+  ChiselStage.emitCHIRRTLFile(
+    new ClickCounter,
     Array("--target-dir", System.getProperty("chisel.output.dir")),
   )
 }

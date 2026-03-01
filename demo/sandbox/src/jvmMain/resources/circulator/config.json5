@@ -10,7 +10,7 @@
       "model": {
         "open": true,
         "all-states-open": true,
-        "all-states-mutable": true,
+        "all-states-mutable": false,
         "all-states-type": [
           "input",
           "output",
@@ -76,6 +76,23 @@
 //        "open": true
 //      }
 //    }
+    "click-counter-chisel": {
+      "package": "io.github.e1turin.circulator.demo.chisel.generated",
+      "state-file": "chisel/build/generated/sources/circulator/arcilator/counter/ClickCounter-states.json",
+      "model": {
+        "all-states-type": [
+          "input",
+          "output",
+          "register",
+          "memory",
+          "wire"
+        ],
+        "states": {}
+      },
+      "library": {
+        "open": true
+      }
+    },
   },
   "variables": {}
 }

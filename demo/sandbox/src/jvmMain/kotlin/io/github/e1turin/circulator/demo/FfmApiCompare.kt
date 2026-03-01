@@ -30,16 +30,16 @@ fun playWithFFM() {
     println("counter.o=${runRawFfmApiForCounter(n)} for $n ticks")
     println()
     println("Hello Jextract FFM World!")
-    println("counter.o=${runJextractFfmApiForCounter()} for $n ticks")
+    println("counter.o=${runJextractFfmApiForCounter(n)} for $n ticks")
     println()
     println("Hello Circulator World!")
-    println("counter.o=${runCustomCounterModel()} for $n ticks")
+    println("counter.o=${runCustomCounterModel(n)} for $n ticks")
     println()
     println("Hello Circulator (precompiled) World!")
-    println("counter.o=${runPrecompiledCounterModel()} for $n ticks")
+    println("counter.o=${runPrecompiledCounterModel(n)} for $n ticks")
     println()
     println("Hello Circulator (Chisel) World!")
-    println("counter.count=${runCounterChisel()} for $n ticks")
+    println("counter.count=${runCounterChisel(n)} for $n ticks")
 //    println()
 //    println("Hello Circulator (Verilog) World!")
 //    println("counter.count=${runCounterVerilog()} for $n ticks")
@@ -183,6 +183,30 @@ fun runCounterChisel(n: Int = 10): Int {
         counter.init()
 
         for (i in 1..n) counter.tick()
+
+        return counter.count.toInt()
+    }
+}
+
+fun runCirculator(n: Int = 10): Int {
+    Arena.ofConfined().use { arena ->
+        val counter = CounterChiselModel.instance(arena, "counterchisel")
+
+        counter.reset = 1
+        for (i in 1..7) {
+            counter.clock = 1
+            counter.eval()
+            counter.clock = 0
+            counter.eval()
+        }
+        counter.reset = 0
+
+        for (i in 1..n) {
+            counter.clock = 1
+            counter.eval()
+            counter.clock = 0
+            counter.eval()
+        }
 
         return counter.count.toInt()
     }
