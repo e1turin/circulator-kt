@@ -155,6 +155,6 @@ public inline fun <reified T> Model.stateProjection(
 public inline fun <reified T> Model.input(offset: Long) = stateProjection<T>(offset, StateProjectionType.INPUT)
 public inline fun <reified T> Model.output(offset: Long) = stateProjection<T>(offset, StateProjectionType.OUTPUT)
 public inline fun <reified T> Model.register(offset: Long) = stateProjection<T>(offset, StateProjectionType.REGISTER)
-public inline fun <reified T> Model.memory(offset: Long, layout: MemoryLayoutBuilder.()->MemoryLayout) = stateProjection<T>(offset, StateProjectionType.MEMORY).also { MemoryLayoutBuilder.layout() }
+public inline fun <reified T> Model.memory(offset: Long, layout: MemoryLayoutBuilder.()-> MemoryLayout) = stateProjection<T>(offset, StateProjectionType.MEMORY).also { MemoryLayoutBuilder.layout() }
 public inline fun <reified T> Model.wire(offset: Long) = stateProjection<T>(offset, StateProjectionType.WIRE)
 

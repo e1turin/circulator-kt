@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 
 /**
  * Types of state corresponding to observable objects' types.
- * Serial names are taken from json encoder in Arcilator's sources.
+ * Serial names are taken from JSON encoder in Arcilator's sources.
  * Permalink: https://github.com/llvm/circt/blob/d675c243c04339563517de1717dacbe3aa8309d5/lib/Dialect/Arc/ModelInfo.cpp#L130C3-L171C6
  */
 @Serializable

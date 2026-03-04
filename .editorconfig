@@ -1,0 +1,31 @@
+root = true
+
+[*.{kt,kts}]
+max_line_length = 100
+
+ktlint_code_style = intellij_idea
+ktlint_function_naming_ignore_when_annotated_with = Composable
+ktlint_standard_no-wildcard-imports = disabled
+
+ktlint_standard_wrapping = disabled
+ktlint_standard_trailing-comma-on-declaration-site = disabled
+ktlint_standard_trailing-comma-on-call-site = disabled
+ktlint_class_signature_rule_force_multiline_when_parameter_count_greater_or_equal_than = 2
+
+[**/build/**/*.kt]
+ktlint = disabled
+
+[**/*.gradle.kts]
+ktlint = disabled
+
+[**/src/commonTest/kotlin/**/*.kt]
+ktlint = disabled
+
+[**/src/test/kotlin/**/*.kt]
+ktlint = disabled
+
+[**/secrets/**/*.kt]
+ktlint = disabled
+
+[**/presentation/resources/**]
+ktlint = disabled

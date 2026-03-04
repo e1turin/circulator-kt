@@ -1,21 +1,13 @@
-import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
-
 plugins {
-    id("kotlin")
+    id("circulator.kotlin-library-jvm-conventions")
     `java-gradle-plugin`
     alias(libs.plugins.gradle.pluginPublish)
     alias(libs.plugins.kotlin.serialization)
 }
 
-kotlin {
-    explicitApi = ExplicitApiMode.Strict
-
-    jvmToolchain(25)
-}
-
 dependencies {
-    implementation(project(":circulator-core"))
-    implementation(libs.kotlin.gradle.plugin)
+    api(project(":circulator-core"))
+    implementation(libs.kotlinGradlePlugin)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinpoet)
 

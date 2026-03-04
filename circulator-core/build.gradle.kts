@@ -1,21 +1,10 @@
-import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
-    alias(libs.plugins.kotlin.multiplatform)
+    id("circulator.kotlin-library-kmp-conventions")
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.vanniktech.mavenPublish)
 }
 
 kotlin {
-    explicitApi = ExplicitApiMode.Strict
-
-    jvm {
-        compilerOptions {
-            jvmTarget = JvmTarget.JVM_25
-        }
-    }
-
     sourceSets {
         val commonMain by getting {
             dependencies {
