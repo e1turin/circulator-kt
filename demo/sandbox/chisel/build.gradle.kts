@@ -64,6 +64,9 @@ fun chisel(name: String, mainClass: String, jvmArgs: List<String> = emptyList())
     return task
 }
 
+val modelName = "ClickCounter" //"CounterChisel"
+val modelDir = "counter"
+
 val compileChisel = chisel(
     "Counter",
     mainClass = "io.github.e1turin.circulator.demo.counter.Main",
@@ -80,9 +83,9 @@ enum class FirtoolOutputAction(val flags: Array<String>, val fileExtension: Stri
     Verilog(arrayOf("--verilog", "-disable-all-randomization", "-strip-debug-info"), "v"),
 }
 
-val firtoolInputFile = chiselOutputDir.file("counter/CounterChisel.fir")
+val firtoolInputFile = chiselOutputDir.file("$modelDir/$modelName.fir")
 val firtoolAction = FirtoolOutputAction.IrHw
-val firtoolOutputFile = firtoolOutputDir.file("CounterChisel.${firtoolAction.fileExtension}")
+val firtoolOutputFile = firtoolOutputDir.file("$modelName.${firtoolAction.fileExtension}")
 
 val compileFirrtl = tasks.register<Exec>("compileFirrtl") {
     dependsOn(compileChisel)
@@ -120,8 +123,8 @@ enum class ArcilatorObserveFlags(val flag: String) {
 }
 
 val arcilatorAction = ArcilatorOutputAction.EmitLlvm
-val arcilatorOutputFile = arcilatorOutputDir.file("counter/Counter.${arcilatorAction.fileExtension}")
-val arcilatorOutputStateFile = arcilatorOutputDir.file("counter/counter-states.json")
+val arcilatorOutputFile = arcilatorOutputDir.file("$modelDir/$modelName.${arcilatorAction.fileExtension}")
+val arcilatorOutputStateFile = arcilatorOutputDir.file("$modelDir/$modelName-states.json")
 
 @OptIn(ExperimentalStdlibApi::class)
 val arcilatorObserves = enumEntries<ArcilatorObserveFlags>().map { it.flag }.toTypedArray()
@@ -188,8 +191,8 @@ sealed interface ClangPlatformBuild {
     }
 }
 
-val clangAction = ClangPlatformBuild.from("counterchisel", arcilatorOutputFile.asFile)
-val clangOutputFile = clangOutputDir.file("counter/${clangAction.libName}")
+val clangAction = ClangPlatformBuild.from(modelName, arcilatorOutputFile.asFile)
+val clangOutputFile = clangOutputDir.file("$modelDir/${clangAction.libName}")
 
 val compileLlvm = tasks.register<Exec>("compileLlvm") {
     dependsOn(compileCirctMlir)

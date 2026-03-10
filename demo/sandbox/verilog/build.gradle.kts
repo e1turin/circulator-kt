@@ -30,7 +30,7 @@ val verilogAction = CirctVerilogAction.IrHw
 val verilogOutputFile = verilogOutputDir.file("counter/counter.${verilogAction.fileExtension}")
 
 // this task is broken, as circt-verilog produces wrong output - it forgets comb.add instruction
-val compileVerilog = tasks.register<Exec>("compileVerilog(broken)") {
+val compileVerilog = tasks.register<Exec>("compileVerilog") {
     group = "circulator"
     description = "Run circt-verilog on Verilog sources"
 

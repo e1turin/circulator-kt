@@ -173,7 +173,8 @@ internal class ModelClassGenerator(
         val stateProjectionName = if (state.isIoPort()) {
             state.name.replaceFirstChar { c -> c.lowercase() }
         } else {
-            state.name.replaceFirstChar { c -> c.uppercase() }.let { "internal${it}" }
+            state.name//.replaceFirstChar { c -> c.uppercase() }
+                .let { "${state.type.name.lowercase()}_${it}" } // hotfix bug with name collision of states of different types
         }
 
         val delegate = when (state.type) {

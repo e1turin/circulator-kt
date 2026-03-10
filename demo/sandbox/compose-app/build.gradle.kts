@@ -30,6 +30,7 @@ compose.desktop {
         jvmArgs("--enable-native-access=ALL-UNNAMED")
     }
 }
+
 fun JavaForkOptions.setupLibraryPath() {
     jvmArgs("--enable-native-access=ALL-UNNAMED")
 
@@ -48,6 +49,7 @@ fun JavaForkOptions.setupLibraryPath() {
 }
 
 tasks.withType<JavaExec>().configureEach {
+    standardInput = System.`in`
     setupLibraryPath()
 }
 
